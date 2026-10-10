@@ -1,0 +1,65 @@
+import "server-only";
+
+import { cache } from "react";
+import { hayBase } from "./env";
+import { publico } from "./supabase";
+import type { Comentario, Libro, Perfil, Texto } from "./tipos";
+
+// Lecturas públicas. Sin base configurada devuelven lo mínimo para que el sitio se vea.
+
+export const PERFIL_VACIO: Perfil = {
+  nombre: "Wagner Pérez Eulufí",
+  frase: "Poesía para leer despacio.",
+  presentacion: "",
+  biografia: "",
+  foto: null,
+  instagram: "https://www.instagram.com/wagnerperezeulufi/",
+  facebook: null,
+  whatsapp: null,
+  correo: null,
+};
+
+const CAMPOS_TEXTO = "id, slug, titulo, categoria, cuerpo, extracto, imagen, estado, publicado_en, actualizado_en";
+
+export const perfil = cache(async (): Promise<Perfil> => {
+  if (!hayBase()) return PERFIL_VACIO;
+  const { data, error } = await publico().from("perfil").select("*").eq("id", 1).maybeSingle();
+  if (error) throw error;
+  return (data as Perfil | null) ?? PERFIL_VACIO;
+});
+
+export async function textosPublicados(opciones: { limite?: number; categoria?: string } = {}): Promise<Texto[]> {
+  if (!hayBase()) return [];
+  let q = publico().from("textos").select(CAMPOS_TEXTO).eq("estado", "publicado").order("publicado_en", { ascending: false });
+  if (opciones.categoria) q = q.eq("categoria", opciones.categoria);
+  if (opciones.limite) q = q.limit(opciones.limite);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as Texto[];
+}
+
+export const textoPublicado = cache(async (slug: string): Promise<Texto | null> => {
+  if (!hayBase()) return null;
+  const { data, error } = await publico().from("textos").select(CAMPOS_TEXTO).eq("slug", slug).eq("estado", "publicado").maybeSingle();
+  if (error) throw error;
+  return data as Texto | null;
+});
+
+export async function comentariosAprobados(textoId: string): Promise<Comentario[]> {
+  if (!hayBase()) return [];
+  const { data, error } = await publico()
+    .from("comentarios")
+    .select("id, texto_id, nombre, cuerpo, estado, respuesta, creado_en")
+    .eq("texto_id", textoId)
+    .eq("estado", "aprobado")
+    .order("creado_en", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as Comentario[];
+}
+
+export async function librosVisibles(): Promise<Libro[]> {
+  if (!hayBase()) return [];
+  const { data, error } = await publico().from("libros").select("*").eq("visible", true).order("orden").order("creado_en", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as Libro[];
+}

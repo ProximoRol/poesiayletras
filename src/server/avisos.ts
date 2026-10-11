@@ -8,7 +8,7 @@ import { env } from "./env";
 
 const escapar = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-export async function avisarComentario(c: { nombre: string; cuerpo: string; tituloTexto: string }): Promise<void> {
+export async function avisarComentario(c: { nombre: string; cuerpo: string; tituloTexto: string; publicado: boolean }): Promise<void> {
   const clave = process.env.RESEND_API_KEY;
   const para = process.env.CORREO_AVISOS;
   const de = process.env.CORREO_REMITENTE ?? "Tu página <avisos@resend.dev>";
@@ -21,9 +21,9 @@ export async function avisarComentario(c: { nombre: string; cuerpo: string; titu
       <p style="margin:0 0 6px"><b>${escapar(c.nombre)}</b> comentó en <i>«${escapar(c.tituloTexto)}»</i>:</p>
       <blockquote style="margin:0 0 24px;padding:14px 18px;background:#f6efe3;border-left:4px solid #b8622f;white-space:pre-line">${escapar(c.cuerpo)}</blockquote>
       <p style="margin:0 0 28px">
-        <a href="${enlace}" style="display:inline-block;background:#b8622f;color:#fff;text-decoration:none;padding:16px 28px;border-radius:100px;font-family:Arial,sans-serif;font-size:18px">Ver y aprobar el comentario</a>
+        <a href="${enlace}" style="display:inline-block;background:#b8622f;color:#fff;text-decoration:none;padding:16px 28px;border-radius:100px;font-family:Arial,sans-serif;font-size:18px">${c.publicado ? "Responder o borrar" : "Ver y aprobar el comentario"}</a>
       </p>
-      <p style="color:#5b4f45;font-size:15px">No aparecerá en tu página hasta que lo apruebes.</p>
+      <p style="color:#5b4f45;font-size:15px">${c.publicado ? "Ya está publicado en tu página. Si no te gusta, puedes borrarlo." : "No aparecerá en tu página hasta que lo apruebes."}</p>
     </div>`;
 
   try {

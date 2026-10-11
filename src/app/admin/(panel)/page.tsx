@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { CATEGORIAS } from "@/domain/textos";
 import { fechaLarga } from "@/lib/contacto";
+import { resumenComentarios } from "@/server/panel/resumen";
 import { usuario } from "@/server/supabase";
 import type { Texto } from "@/server/tipos";
 
 export default async function MisTextos({ searchParams }: { searchParams: Promise<{ aviso?: string }> }) {
   const { aviso } = await searchParams;
   const db = await usuario();
-  const [{ data }, { count: pendientes }] = await Promise.all([
+  const [{ data }, { pendientes, semana }] = await Promise.all([
     db.from("textos").select("id, slug, titulo, categoria, estado, publicado_en, actualizado_en").order("actualizado_en", { ascending: false }),
-    db.from("comentarios").select("id", { count: "exact", head: true }).eq("estado", "pendiente"),
+    resumenComentarios(db),
   ]);
   const textos = (data ?? []) as Texto[];
 
@@ -25,9 +26,14 @@ export default async function MisTextos({ searchParams }: { searchParams: Promis
         </span>
       </Link>
 
-      {!!pendientes && (
+      {(pendientes > 0 || semana > 0) && (
         <div className="aviso-pendientes">
-          <span>💬 Tienes {pendientes === 1 ? "1 comentario nuevo" : `${pendientes} comentarios nuevos`} por revisar</span>
+          <span>
+            💬{" "}
+            {pendientes > 0
+              ? `Tienes ${pendientes === 1 ? "1 comentario" : `${pendientes} comentarios`} por aprobar`
+              : `Esta semana te ${semana === 1 ? "dejaron 1 comentario" : `dejaron ${semana} comentarios`}`}
+          </span>
           <Link href="/admin/comentarios" className="btn btn-oscuro btn-chico">Ver comentarios</Link>
         </div>
       )}

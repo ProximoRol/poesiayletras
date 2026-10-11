@@ -52,6 +52,17 @@ export function FormPerfil({ perfil, urlBase }: { perfil: Perfil; urlBase: strin
         </div>
       </div>
 
+      <div className="caja">
+        <label style={{ display: "flex", gap: 12, alignItems: "flex-start", cursor: "pointer" }}>
+          <input type="checkbox" name="moderar_comentarios" defaultChecked={perfil.moderar_comentarios} style={{ width: 22, height: 22, marginTop: 4 }} />
+          <span>
+            <b>Revisar los comentarios antes de que se publiquen</b>
+            <br />
+            <small className="muted">Si lo dejas sin marcar, los comentarios aparecen al instante y tú puedes borrar los que no te gusten.</small>
+          </span>
+        </label>
+      </div>
+
       <div className="barra-guardar">
         <button type="submit" className="btn btn-primary" disabled={guardando}>{guardando ? "Guardando…" : "Guardar"}</button>
         {estado?.ok && estado.aviso && <span className="aviso exito">{estado.aviso}</span>}

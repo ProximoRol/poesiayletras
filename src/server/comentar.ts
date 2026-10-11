@@ -1,15 +1,16 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { avisarComentario } from "./avisos";
 import { hayBase } from "./env";
 import { publico } from "./supabase";
 
-export type EstadoComentario = { ok: true } | { ok: false; error: string } | null;
+export type EstadoComentario = { ok: true; publicado: boolean } | { ok: false; error: string } | null;
 
 // Contra el spam, sin pedir cuenta ni captcha:
 //  · campo trampa invisible («sitio»): las personas no lo ven ni lo llenan, los robots sí;
 //  · tiempo mínimo: nadie lee y escribe un comentario en menos de 4 segundos.
-// Y todo entra pendiente: nada se publica sin que el autor lo apruebe.
+// Si se publica al instante o queda pendiente lo decide la base (perfil.moderar_comentarios).
 const MIN_MS = 4000;
 
 export async function comentar(_previo: EstadoComentario, form: FormData): Promise<EstadoComentario> {
@@ -22,7 +23,7 @@ export async function comentar(_previo: EstadoComentario, form: FormData): Promi
   const abierto = Number(form.get("abierto") ?? 0);
 
   // Al robot se le responde como si hubiera funcionado: no aprende nada.
-  if (trampa || !abierto || Date.now() - abierto < MIN_MS) return { ok: true };
+  if (trampa || !abierto || Date.now() - abierto < MIN_MS) return { ok: true, publicado: false };
 
   if (!/^[0-9a-f-]{36}$/.test(textoId)) return { ok: false, error: "No encontramos el texto." };
   if (nombre.length < 1 || nombre.length > 80) return { ok: false, error: "Escribe tu nombre (hasta 80 letras)." };
@@ -33,7 +34,12 @@ export async function comentar(_previo: EstadoComentario, form: FormData): Promi
   const { error } = await db.from("comentarios").insert({ texto_id: textoId, nombre, cuerpo });
   if (error) return { ok: false, error: "No se pudo enviar. Inténtalo de nuevo en un momento." };
 
-  const { data: texto } = await db.from("textos").select("titulo").eq("id", textoId).maybeSingle();
-  await avisarComentario({ nombre, cuerpo, tituloTexto: texto?.titulo ?? "tu texto" });
-  return { ok: true };
+  const [{ data: texto }, { data: perfil }] = await Promise.all([
+    db.from("textos").select("titulo, slug").eq("id", textoId).maybeSingle(),
+    db.from("perfil").select("moderar_comentarios").eq("id", 1).maybeSingle(),
+  ]);
+  const publicado = !perfil?.moderar_comentarios;
+  if (publicado && texto?.slug) revalidatePath(`/textos/${texto.slug}`);
+  await avisarComentario({ nombre, cuerpo, tituloTexto: texto?.titulo ?? "tu texto", publicado });
+  return { ok: true, publicado };
 }

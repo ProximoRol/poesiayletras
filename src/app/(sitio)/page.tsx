@@ -62,7 +62,7 @@ export default async function Portada() {
               <span className="eyebrow">{libros.length > 1 ? "Mis libros" : "Mi libro"}</span>
               <h2>Para tenerlo en las manos</h2>
             </div>
-            <VitrinaLibro libro={libros[0]} />
+            <VitrinaLibro libro={libros[0]} whatsapp={p.whatsapp} autor={nombre} />
             {libros.length > 1 && (
               <div className="sec-pie">
                 <Link href="/libros" className="btn btn-ghost">Ver todos mis libros</Link>

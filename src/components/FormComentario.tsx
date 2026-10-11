@@ -12,7 +12,9 @@ export function FormComentario({ textoId, autor }: { textoId: string; autor: str
     return (
       <div className="form-comentario">
         <p className="aviso exito">
-          ¡Gracias por tu comentario! {autor} lo leerá y aparecerá aquí cuando lo apruebe.
+          {estado.publicado
+            ? `¡Gracias por tu comentario! Ya está publicado y ${autor} lo va a leer.`
+            : `¡Gracias por tu comentario! ${autor} lo leerá y aparecerá aquí cuando lo apruebe.`}
         </p>
       </div>
     );
@@ -43,7 +45,7 @@ export function FormComentario({ textoId, autor }: { textoId: string; autor: str
           {enviando ? "Enviando…" : "Enviar comentario"}
         </button>
       </div>
-      <small className="muted">No pedimos correo. Los comentarios se publican después de que el autor los lee.</small>
+      <small className="muted">No pedimos correo ni que crees una cuenta.</small>
     </form>
   );
 }

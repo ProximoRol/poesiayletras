@@ -1,8 +1,11 @@
+import { enlaceWhatsApp } from "@/lib/contacto";
 import { urlImagen } from "@/server/supabase";
 import type { Libro } from "@/server/tipos";
 
-export function VitrinaLibro({ libro }: { libro: Libro }) {
+export function VitrinaLibro({ libro, whatsapp, autor }: { libro: Libro; whatsapp: string | null; autor: string }) {
   const portada = urlImagen(libro.portada);
+  // Sin enlaces de compra (el libro no se vende por internet), se pide directo al autor.
+  const pedir = libro.enlaces.length ? null : enlaceWhatsApp(whatsapp, `¡Hola ${autor}! Quiero un ejemplar de «${libro.titulo}».`);
   return (
     <article className="libro">
       {portada ? (
@@ -16,6 +19,11 @@ export function VitrinaLibro({ libro }: { libro: Libro }) {
         <h3>{libro.titulo}</h3>
         {libro.subtitulo && <p className="subt">{libro.subtitulo}</p>}
         {libro.sinopsis && <p className="sinopsis">{libro.sinopsis}</p>}
+        {pedir && (
+          <div className="acciones">
+            <a href={pedir} target="_blank" rel="noopener noreferrer" className="btn btn-wa">Pídelo por WhatsApp</a>
+          </div>
+        )}
         {libro.enlaces.length > 0 && (
           <div className="acciones">
             {libro.enlaces.map((e, i) => (

@@ -10,6 +10,7 @@ export interface Perfil {
   facebook: string | null;
   whatsapp: string | null;
   correo: string | null;
+  moderar_comentarios: boolean;
 }
 
 export interface Texto {

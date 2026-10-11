@@ -6,10 +6,12 @@ solo se paga el dominio (~USD 12 al año).
 ## 1. Base de datos (Supabase)
 
 1. Crear un proyecto nuevo en supabase.com (nombre: `poesiayletras`, región São Paulo).
-2. SQL Editor → pegar y correr `supabase/migrations/0001_pagina_de_autor.sql`.
+2. SQL Editor → correr, en orden, `supabase/migrations/0001_pagina_de_autor.sql`,
+   `0002_comentarios_al_instante.sql` y después `supabase/contenido-inicial.sql` (su bio,
+   Instagram y el libro).
 3. Dar acceso al autor (SQL Editor), con el correo de Wagner:
    ```sql
-   insert into public.admins (email) values ('correo-de-wagner@ejemplo.com');
+   insert into public.admins (email) values ('<correo de Wagner>');
    ```
 4. Authentication → URL Configuration:
    - Site URL: `https://<dominio>`
@@ -39,13 +41,15 @@ No hace falta la clave de servicio de Supabase: todo pasa por los permisos (RLS)
 
 En `https://<dominio>/admin`:
 
+0. Subir las fotos (están en `contenido/`, fuera de git): «Mi perfil» → Tu foto, y «Libros» →
+   portada de «Cincuenta poemas del silencio». Cargar su WhatsApp en «Mi perfil».
 1. **Mi perfil**: foto, presentación, «Sobre mí», WhatsApp (con código de país, ej. 56912345678),
    Instagram.
 2. **Libros**: agregar el libro con su portada y los enlaces de compra.
 3. **Mis textos → Escribir un texto nuevo**: escribir como en un cuaderno (Enter = verso, línea
    en blanco = estrofa), «Ver cómo queda» y **Publicar**.
-4. **Comentarios**: los lectores comentan sin cuenta; nada aparece hasta que él lo aprueba o
-   responde.
+4. **Comentarios**: los lectores comentan sin cuenta y se publican al instante (así lo pidió);
+   él puede responder o borrar. En «Mi perfil» puede activar revisarlos antes.
 
 ## Desarrollo local
 

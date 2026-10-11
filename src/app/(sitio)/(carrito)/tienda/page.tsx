@@ -9,7 +9,7 @@ const BLOQUES: { clave: string; titulo: string; bajada: string; productos: Produ
   {
     clave: "obra", titulo: "Su obra", bajada: "Poesía para leer y para regalar.",
     productos: [
-      { nombre: "Libro de poemas (físico)", desc: "El poemario en edición impresa. Tapa cuidada, papel de lectura agradable.", precio: 15, ic: "📖", cinta: "Destacado" },
+      { nombre: "Cincuenta poemas del silencio", carrito: "Libro «Cincuenta poemas del silencio»", desc: "Su poemario (2025), en edición impresa.", precio: 15, ic: "📖", cinta: "Su libro" },
       { nombre: "eBook (PDF)", desc: "El mismo poemario en digital, para leer donde estés.", precio: 6, ic: "📱" },
       { nombre: "Edición firmada y numerada", desc: "Ejemplar firmado a mano por el autor, con número de tirada.", precio: 25, ic: "✍️", cinta: "Edición limitada" },
       { nombre: "Marcapáginas con versos", carrito: "Marcapáginas con versos (set de 3)", desc: "Set de 3 marcapáginas con fragmentos de sus poemas.", precio: 4, ic: "🔖" },

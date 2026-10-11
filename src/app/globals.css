@@ -166,7 +166,7 @@ textarea { resize: vertical; min-height: 110px; }
 /* ── LIBROS ── */
 .libro { display: grid; grid-template-columns: 280px 1fr; gap: 48px; align-items: center; padding: 36px 0; }
 .libro + .libro { border-top: 1px solid var(--borde); }
-.libro .tapa { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 6px 14px 14px 6px; box-shadow: 0 24px 50px rgba(46, 38, 32, 0.28), inset 4px 0 0 rgba(0, 0, 0, 0.08); background: linear-gradient(135deg, #4a3a2b, #2e2620); }
+.libro .tapa { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 16px; box-shadow: 0 24px 50px rgba(46, 38, 32, 0.28); background: linear-gradient(135deg, #4a3a2b, #2e2620); }
 .libro .tapa.ph { display: grid; place-items: center; color: var(--crema); font-family: var(--verso); font-size: 1.6rem; text-align: center; padding: 24px; line-height: 1.2; }
 .libro h3 { font-size: clamp(1.8rem, 3vw, 2.4rem); margin: 10px 0 4px; }
 .libro .subt { font-family: var(--verso); font-style: italic; font-size: 1.3rem; color: var(--tinta-suave); margin-bottom: 16px; }

@@ -190,6 +190,7 @@ export async function guardarPerfil(_previo: Resultado, form: FormData): Promise
       facebook,
       whatsapp,
       correo,
+      moderar_comentarios: form.get("moderar_comentarios") === "on",
     })
     .eq("id", 1);
   if (error) return { ok: false, error: "No se pudo guardar." };

@@ -17,6 +17,7 @@ export const PERFIL_VACIO: Perfil = {
   facebook: null,
   whatsapp: null,
   correo: null,
+  moderar_comentarios: false,
 };
 
 const CAMPOS_TEXTO = "id, slug, titulo, categoria, cuerpo, extracto, imagen, estado, publicado_en, actualizado_en";

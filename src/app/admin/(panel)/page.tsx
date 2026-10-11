@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { CATEGORIAS } from "@/domain/textos";
 import { fechaLarga } from "@/lib/contacto";
-import { resumenComentarios } from "@/server/panel/resumen";
+import { resumenPanel } from "@/server/panel/resumen";
 import { usuario } from "@/server/supabase";
 import type { Texto } from "@/server/tipos";
 
 export default async function MisTextos({ searchParams }: { searchParams: Promise<{ aviso?: string }> }) {
   const { aviso } = await searchParams;
   const db = await usuario();
-  const [{ data }, { pendientes, semana }] = await Promise.all([
+  const [{ data }, { pendientes, semana, porEnviar }] = await Promise.all([
     db.from("textos").select("id, slug, titulo, categoria, estado, publicado_en, actualizado_en").order("actualizado_en", { ascending: false }),
-    resumenComentarios(db),
+    resumenPanel(db),
   ]);
   const textos = (data ?? []) as Texto[];
 
@@ -25,6 +25,13 @@ export default async function MisTextos({ searchParams }: { searchParams: Promis
           <small>Un poema, un cuento o lo que quieras compartir</small>
         </span>
       </Link>
+
+      {porEnviar > 0 && (
+        <div className="aviso-pendientes" style={{ background: "var(--exito-fondo)", color: "var(--exito)" }}>
+          <span>📦 {porEnviar === 1 ? "Tienes 1 pedido pagado" : `Tienes ${porEnviar} pedidos pagados`} por enviar</span>
+          <Link href="/admin/pedidos" className="btn btn-oscuro btn-chico">Ver pedidos</Link>
+        </div>
+      )}
 
       {(pendientes > 0 || semana > 0) && (
         <div className="aviso-pendientes">

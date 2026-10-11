@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { VitrinaLibro } from "@/components/Libro";
 import { GrillaTextos } from "@/components/TarjetaTexto";
-import { librosVisibles, perfil, textosPublicados } from "@/server/datos";
+import { librosVisibles, perfil, productosVisibles, textosPublicados } from "@/server/datos";
 import { urlImagen } from "@/server/supabase";
 
 export const revalidate = 300;
 
 export default async function Portada() {
-  const [p, textos, libros] = await Promise.all([perfil(), textosPublicados({ limite: 6 }), librosVisibles()]);
+  const [p, textos, libros, productos] = await Promise.all([perfil(), textosPublicados({ limite: 6 }), librosVisibles(), productosVisibles()]);
   const foto = urlImagen(p.foto);
   const [nombre, ...apellidos] = p.nombre.split(" ");
   const verso = textos.find((t) => t.categoria === "poesia")?.extracto.split("\n")[0];
@@ -62,7 +62,7 @@ export default async function Portada() {
               <span className="eyebrow">{libros.length > 1 ? "Mis libros" : "Mi libro"}</span>
               <h2>Para tenerlo en las manos</h2>
             </div>
-            <VitrinaLibro libro={libros[0]} whatsapp={p.whatsapp} autor={nombre} />
+            <VitrinaLibro libro={libros[0]} producto={productos.find((x) => x.libro_id === libros[0].id)} whatsapp={p.whatsapp} autor={nombre} />
             {libros.length > 1 && (
               <div className="sec-pie">
                 <Link href="/libros" className="btn btn-ghost">Ver todos mis libros</Link>

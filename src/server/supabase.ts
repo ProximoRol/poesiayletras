@@ -5,9 +5,11 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { env, exigir } from "./env";
 
-// Dos clientes. No hay clave de servicio: todo pasa por RLS.
+// Tres clientes. Elegir el más restringido que sirva:
 //  · publico()  — anónimo, sin cookies: lo que ve cualquier lector (cacheable).
-//  · usuario()  — con la sesión del autor: el panel.
+//  · usuario()  — con la sesión del autor: el panel. RLS decide.
+//  · servicio() — salta RLS. SOLO para confirmar pagos de Mercado Pago y mostrar el pedido al
+//                 comprador que vuelve del pago. Nunca en el panel.
 
 let _publico: SupabaseClient | null = null;
 export function publico(): SupabaseClient {
@@ -31,6 +33,14 @@ export async function usuario(): Promise<SupabaseClient> {
       },
     },
   });
+}
+
+let _servicio: SupabaseClient | null = null;
+export function servicio(): SupabaseClient {
+  _servicio ??= createClient(exigir("supabaseUrl"), exigir("supabaseServicio"), {
+    auth: { persistSession: false },
+  });
+  return _servicio;
 }
 
 /** URL pública de una imagen del bucket «imagenes» (o la URL tal cual si ya es completa). */

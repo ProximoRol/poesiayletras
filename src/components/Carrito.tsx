@@ -1,72 +1,90 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { formatoCLP } from "@/lib/dinero";
 
-// Carrito de la corrección y la tienda. Vive en el navegador (localStorage) y el pedido se
-// envía por WhatsApp; el autor confirma el detalle y cobra. Si algún día se agrega un enlace de
-// pago de Stripe, va en NEXT_PUBLIC_STRIPE_PAYMENT_LINK.
+// Carrito del sitio. En el navegador solo se guarda qué productos y cuántos; nombre, precio y
+// stock vienen siempre de la base (y al pagar, el precio lo vuelve a poner la base).
 
-type Item = { nombre: string; precio: number; cantidad: number };
-type Carro = { agregar: (nombre: string, precio: number) => void };
+export type ProductoCarro = { id: string; nombre: string; precio: number; stock: number | null };
+type Linea = { id: string; cantidad: number };
+type Carro = {
+  agregar: (id: string) => void;
+  lineas: (ProductoCarro & { cantidad: number })[];
+  total: number;
+  vaciar: () => void;
+  /** false hasta leer el carrito guardado en el navegador. */
+  listo: boolean;
+};
 
-const CLAVE = "wagner_cart";
-const Contexto = createContext<Carro>({ agregar: () => {} });
-const dinero = (n: number) => `$${n.toFixed(0)}`;
-const PAGO = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK ?? "";
+const CLAVE = "carrito_v2";
+const Contexto = createContext<Carro>({ agregar: () => {}, lineas: [], total: 0, vaciar: () => {}, listo: false });
+export const useCarrito = () => useContext(Contexto);
 
-function leer(): Item[] {
+function leer(): Linea[] {
   try {
     const c = JSON.parse(localStorage.getItem(CLAVE) ?? "[]");
-    return Array.isArray(c) ? c.filter((i) => typeof i?.nombre === "string").map((i) => ({ nombre: i.nombre, precio: Number(i.precio ?? i.price) || 0, cantidad: Number(i.cantidad ?? i.qty) || 1 })) : [];
+    return Array.isArray(c) ? c.filter((i) => typeof i?.id === "string" && Number.isInteger(i?.cantidad) && i.cantidad > 0) : [];
   } catch {
     return [];
   }
 }
 
-export function CarritoProvider({ whatsapp, autor, children }: { whatsapp: string | null; autor: string; children: React.ReactNode }) {
-  const [items, setItems] = useState<Item[]>([]);
+export function CarritoProvider({ productos, children }: { productos: ProductoCarro[]; children: React.ReactNode }) {
+  const [guardado, setGuardado] = useState<Linea[]>([]);
   const [abierto, setAbierto] = useState(false);
   const [listo, setListo] = useState(false);
+  // En la compra y en el pedido el botón flotante sobra (y en celular tapa el formulario).
+  const ruta = usePathname();
+  const sinBoton = ruta === "/comprar" || ruta.startsWith("/pedido/");
 
   // El carrito guardado solo existe en el navegador: se lee después de hidratar.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setItems(leer());
+    setGuardado(leer());
     setListo(true);
   }, []);
   useEffect(() => {
     if (!listo) return;
     try {
-      localStorage.setItem(CLAVE, JSON.stringify(items));
+      localStorage.setItem(CLAVE, JSON.stringify(guardado));
     } catch {}
-  }, [items, listo]);
+  }, [guardado, listo]);
 
-  function agregar(nombre: string, precio: number) {
-    setItems((prev) => {
-      const ya = prev.find((i) => i.nombre === nombre);
-      return ya ? prev.map((i) => (i === ya ? { ...i, cantidad: i.cantidad + 1 } : i)) : [...prev, { nombre, precio, cantidad: 1 }];
-    });
+  // Solo productos que siguen a la venta, con la cantidad limitada al stock.
+  const lineas = useMemo(
+    () =>
+      guardado.flatMap((l) => {
+        const p = productos.find((x) => x.id === l.id);
+        if (!p || p.stock === 0) return [];
+        return [{ ...p, cantidad: p.stock === null ? l.cantidad : Math.min(l.cantidad, p.stock) }];
+      }),
+    [guardado, productos],
+  );
+  const total = lineas.reduce((s, l) => s + l.precio * l.cantidad, 0);
+  const cuenta = lineas.reduce((s, l) => s + l.cantidad, 0);
+
+  function vaciar() {
+    // También lo guardado: este efecto puede correr antes de que se lea el carrito al cargar.
+    try {
+      localStorage.removeItem(CLAVE);
+    } catch {}
+    setGuardado([]);
+  }
+  function agregar(id: string) {
+    setGuardado((prev) => (prev.some((l) => l.id === id) ? prev.map((l) => (l.id === id ? { ...l, cantidad: l.cantidad + 1 } : l)) : [...prev, { id, cantidad: 1 }]));
     setAbierto(true);
   }
-  function cambiar(idx: number, delta: number) {
-    setItems((prev) => prev.flatMap((it, i) => (i !== idx ? [it] : it.cantidad + delta > 0 ? [{ ...it, cantidad: it.cantidad + delta }] : [])));
-  }
-
-  const total = items.reduce((s, i) => s + i.precio * i.cantidad, 0);
-  const cuenta = items.reduce((s, i) => s + i.cantidad, 0);
-  const numero = (whatsapp ?? "").replace(/[^\d]/g, "");
-
-  function pedirWhatsApp() {
-    let msg = `¡Hola ${autor}! Quiero encargar:\n\n`;
-    for (const i of items) msg += `• ${i.nombre} x${i.cantidad} — ${dinero(i.precio * i.cantidad)}\n`;
-    msg += `\nTotal aprox.: ${dinero(total)}`;
-    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
+  function cambiar(id: string, delta: number) {
+    setGuardado((prev) => prev.flatMap((l) => (l.id !== id ? [l] : l.cantidad + delta > 0 ? [{ ...l, cantidad: Math.min(l.cantidad + delta, 20) }] : [])));
   }
 
   return (
-    <Contexto.Provider value={{ agregar }}>
+    <Contexto.Provider value={{ agregar, lineas, total, vaciar, listo }}>
       {children}
-      {cuenta > 0 && !abierto && (
+      {cuenta > 0 && !abierto && !sinBoton && (
         <button type="button" className="btn btn-oscuro carrito-btn" onClick={() => setAbierto(true)}>
           Carrito ({cuenta})
         </button>
@@ -80,34 +98,29 @@ export function CarritoProvider({ whatsapp, autor, children }: { whatsapp: strin
               <button type="button" className="drawer-close" onClick={() => setAbierto(false)} aria-label="Cerrar">×</button>
             </div>
             <div className="drawer-body">
-              {!items.length && <p className="vacio">Tu carrito está vacío.</p>}
-              {items.map((i, idx) => (
-                <div key={i.nombre} className="cart-item">
+              {!lineas.length && <p className="vacio">Tu carrito está vacío.</p>}
+              {lineas.map((l) => (
+                <div key={l.id} className="cart-item">
                   <div className="ci-body">
-                    <h4>{i.nombre}</h4>
-                    <div className="ci-price">{dinero(i.precio)} c/u</div>
+                    <h4>{l.nombre}</h4>
+                    <div className="ci-price">{formatoCLP(l.precio)} c/u</div>
                     <div className="qty">
-                      <button type="button" onClick={() => cambiar(idx, -1)} aria-label="Quitar uno">−</button>
-                      <span>{i.cantidad}</span>
-                      <button type="button" onClick={() => cambiar(idx, 1)} aria-label="Añadir uno">+</button>
+                      <button type="button" onClick={() => cambiar(l.id, -1)} aria-label="Quitar uno">−</button>
+                      <span>{l.cantidad}</span>
+                      <button type="button" onClick={() => cambiar(l.id, 1)} aria-label="Añadir uno" disabled={l.stock !== null && l.cantidad >= l.stock}>+</button>
                     </div>
-                    <button type="button" className="ci-remove" onClick={() => cambiar(idx, -i.cantidad)}>Quitar</button>
+                    <button type="button" className="ci-remove" onClick={() => cambiar(l.id, -l.cantidad)}>Quitar</button>
                   </div>
-                  <div className="ci-price">{dinero(i.precio * i.cantidad)}</div>
+                  <div className="ci-price">{formatoCLP(l.precio * l.cantidad)}</div>
                 </div>
               ))}
             </div>
             <div className="drawer-foot">
-              <div className="cart-total"><span>Total</span><span>{dinero(total)}</span></div>
-              {PAGO && items.length > 0 && (
-                <a className="btn btn-primary" href={PAGO} target="_blank" rel="noopener noreferrer">Pagar con tarjeta</a>
+              <div className="cart-total"><span>Total</span><span>{formatoCLP(total)}</span></div>
+              {lineas.length > 0 && (
+                <Link href="/comprar" className="btn btn-primary" onClick={() => setAbierto(false)}>Comprar</Link>
               )}
-              {numero ? (
-                <button type="button" className="btn btn-wa" disabled={!items.length} onClick={pedirWhatsApp}>Pedir por WhatsApp</button>
-              ) : (
-                <p className="aviso info">Pronto podrás hacer tu pedido desde aquí.</p>
-              )}
-              <small className="muted centro">Precios de referencia (USD). Confirmamos el detalle antes de cobrar.</small>
+              <small className="muted centro">Pago seguro con Mercado Pago. El envío se paga al recibir (por pagar).</small>
             </div>
           </aside>
         </>
@@ -116,11 +129,20 @@ export function CarritoProvider({ whatsapp, autor, children }: { whatsapp: strin
   );
 }
 
-export function BotonAgregar({ nombre, precio, texto = "Añadir", clase = "btn btn-primary btn-chico" }: { nombre: string; precio: number; texto?: string; clase?: string }) {
-  const { agregar } = useContext(Contexto);
+export function BotonAgregar({ id, agotado, texto = "Añadir al carrito", clase = "btn btn-primary btn-chico" }: { id: string; agotado?: boolean; texto?: string; clase?: string }) {
+  const { agregar } = useCarrito();
+  if (agotado) return <span className="estado borrador">Agotado</span>;
   return (
-    <button type="button" className={clase} onClick={() => agregar(nombre, precio)}>
+    <button type="button" className={clase} onClick={() => agregar(id)}>
       {texto}
     </button>
   );
+}
+
+/** En la página del pedido: vacía el carrito una vez que el pedido existe. */
+export function VaciarCarrito() {
+  const { vaciar } = useCarrito();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => vaciar(), []);
+  return null;
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BotonConfirmar } from "@/components/panel/BotonConfirmar";
 import { fechaLarga } from "@/lib/contacto";
 import { aprobarComentario, borrarComentario, responderComentario } from "@/server/panel/acciones";
-import { resumenComentarios, SEMANA_MS } from "@/server/panel/resumen";
+import { resumenPanel, SEMANA_MS } from "@/server/panel/resumen";
 import { usuario } from "@/server/supabase";
 import type { Comentario } from "@/server/tipos";
 
@@ -11,7 +11,7 @@ type ConTexto = Comentario & { textos: { titulo: string; slug: string } | null }
 export default async function Comentarios({ searchParams }: { searchParams: Promise<{ ver?: string }> }) {
   const { ver } = await searchParams;
   const db = await usuario();
-  const { pendientes } = await resumenComentarios(db);
+  const { pendientes } = await resumenPanel(db);
   const soloPendientes = ver === "pendientes" && pendientes > 0;
 
   let q = db.from("comentarios").select("*, textos(titulo, slug)").order("creado_en", { ascending: false }).limit(200);

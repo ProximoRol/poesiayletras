@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { BotonAgregar } from "@/components/Carrito";
 import { enlaceWhatsApp } from "@/lib/contacto";
 import { perfil } from "@/server/datos";
 
@@ -20,17 +19,17 @@ const CUIDADOS = [
 
 const PLANES = [
   {
-    nombre: "Poema suelto", carrito: "Poema suelto", precio: 8, unidad: "/ poema", nota: "Hasta 40 versos",
+    nombre: "Poema suelto", precio: 8, unidad: "/ poema", nota: "Hasta 40 versos",
     desc: "Corrección de un poema individual: ortografía, puntuación y ritmo.",
     incluye: ["Ortografía y gramática", "Puntuación y mayúsculas", "Ritmo y musicalidad", "Comentarios de estilo"],
   },
   {
-    nombre: "Poemario · Cuento", carrito: "Poemario · Cuento (por página)", precio: 5, unidad: "/ página", nota: "Mínimo 5 páginas · devolución con notas", destacado: true,
+    nombre: "Poemario · Cuento", precio: 5, unidad: "/ página", nota: "Mínimo 5 páginas · devolución con notas", destacado: true,
     desc: "Revisión completa de un conjunto de poemas o un cuento corto.",
     incluye: ["Todo lo del plan anterior", "Fluidez y claridad global", "Repeticiones y redundancias", "Informe con sugerencias", "Una ronda de ajustes incluida"],
   },
   {
-    nombre: "Acompañamiento", carrito: "Acompañamiento de manuscrito", precio: 60, unidad: "/ proyecto", nota: "Presupuesto según extensión",
+    nombre: "Acompañamiento", precio: 60, unidad: "/ proyecto", nota: "Presupuesto según extensión",
     desc: "Lectura crítica y corrección de tu manuscrito para concursos o publicación.",
     incluye: ["Corrección integral", "Lectura crítica del conjunto", "Recomendaciones para concursos", "Dos rondas de ajustes", "Sesión de comentarios"],
   },
@@ -99,7 +98,7 @@ export default async function Correccion() {
           <div className="sec-head center">
             <span className="eyebrow">Servicios</span>
             <h2>Elige cómo quieres que cuide tu obra</h2>
-            <p>Añade lo que necesites al carrito o escríbeme para algo a medida.</p>
+            <p>Escríbeme, cuéntame qué escribiste y te digo plazo y precio exacto.</p>
           </div>
           <div className="plans">
             {PLANES.map((pl) => (
@@ -112,7 +111,16 @@ export default async function Correccion() {
                 <ul>
                   {pl.incluye.map((i) => <li key={i}>{i}</li>)}
                 </ul>
-                <BotonAgregar nombre={pl.carrito} precio={pl.precio} texto="Añadir al carrito" clase={`btn ${pl.destacado ? "btn-primary" : "btn-ghost"}`} />
+                {wa && (
+                  <a
+                    href={enlaceWhatsApp(p.whatsapp, `¡Hola ${p.nombre.split(" ")[0]}! Me interesa la corrección «${pl.nombre}». Te cuento sobre mi texto:`)!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`btn ${pl.destacado ? "btn-primary" : "btn-ghost"}`}
+                  >
+                    Consultar por WhatsApp
+                  </a>
+                )}
               </div>
             ))}
           </div>

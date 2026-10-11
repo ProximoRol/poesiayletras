@@ -1,11 +1,14 @@
 import { enlaceWhatsApp } from "@/lib/contacto";
+import { formatoCLP } from "@/lib/dinero";
+import { BotonAgregar } from "./Carrito";
 import { urlImagen } from "@/server/supabase";
-import type { Libro } from "@/server/tipos";
+import type { Libro, Producto } from "@/server/tipos";
 
-export function VitrinaLibro({ libro, whatsapp, autor }: { libro: Libro; whatsapp: string | null; autor: string }) {
+export function VitrinaLibro({ libro, producto, whatsapp, autor }: { libro: Libro; producto?: Producto; whatsapp: string | null; autor: string }) {
   const portada = urlImagen(libro.portada);
-  // Sin enlaces de compra (el libro no se vende por internet), se pide directo al autor.
-  const pedir = libro.enlaces.length ? null : enlaceWhatsApp(whatsapp, `¡Hola ${autor}! Quiero un ejemplar de «${libro.titulo}».`);
+  // Se compra en la tienda propia si hay un producto para este libro; si no, con los enlaces
+  // de otras tiendas; y si no hay ninguno, se pide al autor por WhatsApp.
+  const pedir = producto || libro.enlaces.length ? null : enlaceWhatsApp(whatsapp, `¡Hola ${autor}! Quiero un ejemplar de «${libro.titulo}».`);
   return (
     <article className="libro">
       {portada ? (
@@ -19,6 +22,13 @@ export function VitrinaLibro({ libro, whatsapp, autor }: { libro: Libro; whatsap
         <h3>{libro.titulo}</h3>
         {libro.subtitulo && <p className="subt">{libro.subtitulo}</p>}
         {libro.sinopsis && <p className="sinopsis">{libro.sinopsis}</p>}
+        {producto && (
+          <div className="acciones" style={{ alignItems: "center" }}>
+            <span className="serif" style={{ fontSize: "1.8rem" }}>{formatoCLP(producto.precio)}</span>
+            <BotonAgregar id={producto.id} agotado={producto.stock === 0} texto="Comprar" clase="btn btn-primary" />
+            <small className="muted" style={{ flexBasis: "100%" }}>Pago con Mercado Pago · envío a todo Chile por pagar</small>
+          </div>
+        )}
         {pedir && (
           <div className="acciones">
             <a href={pedir} target="_blank" rel="noopener noreferrer" className="btn btn-wa">Pídelo por WhatsApp</a>

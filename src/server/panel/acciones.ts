@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { aSlug, esCategoria, extracto, slugLibre } from "@/domain/textos";
+import { avisarPedidoEnviado, type PedidoCorreo } from "../avisos";
 import { usuario } from "../supabase";
 import type { EnlaceCompra } from "../tipos";
 import { exigirAutor } from "./auth";
@@ -202,4 +203,70 @@ export async function salir() {
   const db = await usuario();
   await db.auth.signOut();
   redirect("/admin/login");
+}
+
+// ── Tienda ──────────────────────────────────────────────────────────────────
+
+export async function guardarProducto(_previo: Resultado, form: FormData): Promise<Resultado> {
+  await exigirAutor();
+  const db = await usuario();
+  const id = txt(form, "id");
+  const nombre = txt(form, "nombre");
+  if (!nombre) return { ok: false, error: "Ponle un nombre al producto." };
+  const precio = Number(txt(form, "precio").replace(/[^\d]/g, ""));
+  if (!Number.isInteger(precio) || precio < 100) return { ok: false, error: "Escribe el precio en pesos, por ejemplo 15000." };
+  const stockTxt = txt(form, "stock").replace(/[^\d]/g, "");
+  const stock = stockTxt === "" ? null : Number(stockTxt);
+  const libroId = txt(form, "libro_id") || null;
+
+  const datos = {
+    nombre,
+    descripcion: String(form.get("descripcion") ?? "").trim(),
+    precio,
+    stock,
+    foto: opcional(form, "foto"),
+    libro_id: libroId,
+    visible: form.get("visible") === "on",
+  };
+  const { error } = id ? await db.from("productos").update(datos).eq("id", id) : await db.from("productos").insert(datos);
+  if (error) return { ok: false, error: "No se pudo guardar el producto." };
+  refrescarSitio();
+  if (!id) redirect("/admin/tienda?aviso=" + encodeURIComponent("Producto agregado. Ya está a la venta."));
+  return { ok: true, aviso: "Producto guardado." };
+}
+
+export async function borrarProducto(form: FormData) {
+  await exigirAutor();
+  const db = await usuario();
+  await db.from("productos").delete().eq("id", txt(form, "id"));
+  refrescarSitio();
+  redirect("/admin/tienda?aviso=" + encodeURIComponent("Producto borrado."));
+}
+
+// ── Pedidos ─────────────────────────────────────────────────────────────────
+
+export async function marcarEnviado(form: FormData) {
+  await exigirAutor();
+  const db = await usuario();
+  const id = txt(form, "id");
+  const seguimiento = txt(form, "seguimiento").slice(0, 100) || null;
+  const { data } = await db
+    .from("pedidos")
+    .update({ estado: "enviado", enviado_en: new Date().toISOString(), seguimiento })
+    .eq("id", id)
+    .eq("estado", "pagado")
+    .select("*")
+    .maybeSingle();
+  if (data) {
+    const { data: p } = await db.from("perfil").select("nombre").eq("id", 1).maybeSingle();
+    await avisarPedidoEnviado(data as PedidoCorreo, (p?.nombre as string | undefined) ?? "");
+  }
+  revalidatePath("/admin", "layout");
+}
+
+export async function cancelarPedido(form: FormData) {
+  await exigirAutor();
+  const db = await usuario();
+  await db.from("pedidos").update({ estado: "cancelado" }).eq("id", txt(form, "id")).eq("estado", "pendiente_pago");
+  revalidatePath("/admin", "layout");
 }

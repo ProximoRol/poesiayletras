@@ -41,6 +41,38 @@ export interface EnlaceCompra {
   url: string;
 }
 
+export interface Producto {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  precio: number;
+  foto: string | null;
+  stock: number | null;
+  libro_id: string | null;
+  visible: boolean;
+  orden: number;
+}
+
+export interface Pedido {
+  id: string;
+  numero: number;
+  estado: "pendiente_pago" | "pagado" | "enviado" | "cancelado";
+  nombre: string;
+  correo: string;
+  telefono: string;
+  rut: string | null;
+  direccion: string;
+  comuna: string;
+  region: string;
+  notas: string;
+  items: { producto_id: string; nombre: string; precio: number; cantidad: number }[];
+  total: number;
+  seguimiento: string | null;
+  pagado_en: string | null;
+  enviado_en: string | null;
+  creado_en: string;
+}
+
 export interface Libro {
   id: string;
   titulo: string;

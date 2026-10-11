@@ -7,7 +7,7 @@ solo se paga el dominio (~USD 12 al año).
 
 1. Crear un proyecto nuevo en supabase.com (nombre: `poesiayletras`, región São Paulo).
 2. SQL Editor → correr, en orden, `supabase/migrations/0001_pagina_de_autor.sql`,
-   `0002_comentarios_al_instante.sql` y después `supabase/contenido-inicial.sql` (su bio,
+   `0002_comentarios_al_instante.sql`, `0003_tienda_y_pedidos.sql` y después `supabase/contenido-inicial.sql` (su bio,
    Instagram y el libro).
 3. Dar acceso al autor (SQL Editor), con el correo de Wagner:
    ```sql
@@ -35,7 +35,19 @@ solo se paga el dominio (~USD 12 al año).
    `CORREO_AVISOS` (correo de Wagner) y `CORREO_REMITENTE` (`Tu página <avisos@<dominio>>`).
    El correo trae un botón que lo lleva directo a aprobar el comentario.
 
-No hace falta la clave de servicio de Supabase: todo pasa por los permisos (RLS) de la base.
+5. Tienda con Mercado Pago (la plata llega a la cuenta de Wagner):
+   - Wagner abre su cuenta en mercadopago.cl con su RUT (si no la tiene).
+   - mercadopago.cl/developers → Tus integraciones → Crear aplicación → «Pagos online»,
+     «Checkout Pro». En «Credenciales de producción» copiar el **Access Token**
+     → `MERCADOPAGO_ACCESS_TOKEN`.
+   - En la misma aplicación → Webhooks → URL `https://<dominio>/api/mercadopago`, evento
+     «Pagos». Copiar la clave secreta → `MERCADOPAGO_WEBHOOK_SECRET`.
+   - Supabase → Project Settings → API → `service_role` → `SUPABASE_SERVICE_ROLE_KEY` (solo se
+     usa para confirmar pagos; nunca con prefijo `NEXT_PUBLIC_`).
+   - Probar con una compra real chica y reembolsarla desde Mercado Pago.
+
+La clave de servicio de Supabase solo la usa la confirmación de pagos; todo lo demás pasa por
+los permisos (RLS) de la base.
 
 ## 3. Primeros pasos de Wagner
 
@@ -45,10 +57,13 @@ En `https://<dominio>/admin`:
    portada de «Cincuenta poemas del silencio». Cargar su WhatsApp en «Mi perfil».
 1. **Mi perfil**: foto, presentación, «Sobre mí», WhatsApp (con código de país, ej. 56912345678),
    Instagram.
-2. **Libros**: agregar el libro con su portada y los enlaces de compra.
-3. **Mis textos → Escribir un texto nuevo**: escribir como en un cuaderno (Enter = verso, línea
+2. **Tienda → Agregar un producto**: «Cincuenta poemas del silencio», precio, cuántos tiene,
+   y en «¿Es uno de tus libros?» elegir el libro: así aparece «Comprar» junto al libro.
+3. **Pedidos**: cuando llega uno pagado (también le llega un correo), lo despacha por pagar y
+   aprieta «Marcar como enviado».
+4. **Mis textos → Escribir un texto nuevo**: escribir como en un cuaderno (Enter = verso, línea
    en blanco = estrofa), «Ver cómo queda» y **Publicar**.
-4. **Comentarios**: los lectores comentan sin cuenta y se publican al instante (así lo pidió);
+5. **Comentarios**: los lectores comentan sin cuenta y se publican al instante (así lo pidió);
    él puede responder o borrar. En «Mi perfil» puede activar revisarlos antes.
 
 ## Desarrollo local
@@ -57,6 +72,7 @@ En `https://<dominio>/admin`:
 npm install
 npm run local:arrancar      # Supabase en Docker, puertos 563xx (Ugen usa 553xx)
 npm run local:admin         # autor de prueba + textos de ejemplo (credenciales en .env.local)
+node scripts/mp-falso.mjs   # Mercado Pago simulado para probar compras (otra terminal)
 npm run dev                 # http://localhost:3110
 npm run local:permisos      # comprueba que RLS bloquea a los anónimos
 npm run check               # tipos, lint y pruebas

@@ -3,7 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { hayBase } from "./env";
 import { publico } from "./supabase";
-import type { Comentario, Libro, Perfil, Texto } from "./tipos";
+import type { Comentario, Libro, Perfil, Producto, Texto } from "./tipos";
 
 // Lecturas públicas. Sin base configurada devuelven lo mínimo para que el sitio se vea.
 
@@ -64,3 +64,10 @@ export async function librosVisibles(): Promise<Libro[]> {
   if (error) throw error;
   return (data ?? []) as Libro[];
 }
+
+export const productosVisibles = cache(async (): Promise<Producto[]> => {
+  if (!hayBase()) return [];
+  const { data, error } = await publico().from("productos").select("*").eq("visible", true).order("orden").order("creado_en");
+  if (error) throw error;
+  return (data ?? []) as Producto[];
+});

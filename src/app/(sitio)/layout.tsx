@@ -1,15 +1,16 @@
 import Link from "next/link";
+import { CarritoProvider } from "@/components/Carrito";
 import { Menu } from "@/components/Menu";
 import { SECCIONES } from "@/lib/secciones";
 import { enlaceWhatsApp } from "@/lib/contacto";
-import { perfil } from "@/server/datos";
+import { perfil, productosVisibles } from "@/server/datos";
 
 export default async function LayoutSitio({ children }: { children: React.ReactNode }) {
-  const p = await perfil();
+  const [p, productos] = await Promise.all([perfil(), productosVisibles()]);
   const wa = enlaceWhatsApp(p.whatsapp, `¡Hola ${p.nombre.split(" ")[0]}! Te escribo desde tu página.`);
 
   return (
-    <>
+    <CarritoProvider productos={productos.map(({ id, nombre, precio, stock }) => ({ id, nombre, precio, stock }))}>
       <Menu nombre={p.nombre} />
       <main>{children}</main>
       <footer className="pie">
@@ -46,7 +47,7 @@ export default async function LayoutSitio({ children }: { children: React.ReactN
           <IconoWhatsApp />
         </a>
       )}
-    </>
+    </CarritoProvider>
   );
 }
 

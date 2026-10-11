@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { supabaseNavegador } from "@/lib/supabase-navegador";
 
-export function FormLogin({ noAdmin, enlaceVencido, hayBase }: { noAdmin: boolean; enlaceVencido: boolean; hayBase: boolean }) {
+export function FormLogin({ noAdmin, enlaceVencido, hayBase, destino }: { noAdmin: boolean; enlaceVencido: boolean; hayBase: boolean; destino: string }) {
   const router = useRouter();
   const [correo, setCorreo] = useState("");
   const [clave, setClave] = useState("");
@@ -26,7 +26,7 @@ export function FormLogin({ noAdmin, enlaceVencido, hayBase }: { noAdmin: boolea
       setEnviando(false);
       return;
     }
-    router.replace("/admin");
+    router.replace(destino);
     router.refresh();
   }
 

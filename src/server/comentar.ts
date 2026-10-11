@@ -1,5 +1,6 @@
 "use server";
 
+import { avisarComentario } from "./avisos";
 import { hayBase } from "./env";
 import { publico } from "./supabase";
 
@@ -28,7 +29,11 @@ export async function comentar(_previo: EstadoComentario, form: FormData): Promi
   if (cuerpo.length < 2) return { ok: false, error: "Escribe tu comentario." };
   if (cuerpo.length > 3000) return { ok: false, error: "El comentario es muy largo (máximo 3.000 caracteres)." };
 
-  const { error } = await publico().from("comentarios").insert({ texto_id: textoId, nombre, cuerpo });
+  const db = publico();
+  const { error } = await db.from("comentarios").insert({ texto_id: textoId, nombre, cuerpo });
   if (error) return { ok: false, error: "No se pudo enviar. Inténtalo de nuevo en un momento." };
+
+  const { data: texto } = await db.from("textos").select("titulo").eq("id", textoId).maybeSingle();
+  await avisarComentario({ nombre, cuerpo, tituloTexto: texto?.titulo ?? "tu texto" });
   return { ok: true };
 }

@@ -27,7 +27,8 @@ export async function proxy(req: NextRequest) {
   if (!data.user && !publica) {
     const destino = req.nextUrl.clone();
     destino.pathname = "/admin/login";
-    destino.search = "";
+    // Después de entrar vuelve a donde iba (p. ej. el botón del correo de aviso).
+    destino.search = req.nextUrl.pathname === "/admin" ? "" : `?volver=${encodeURIComponent(req.nextUrl.pathname)}`;
     return NextResponse.redirect(destino);
   }
   return res;

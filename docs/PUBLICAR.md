@@ -28,6 +28,10 @@ solo se paga el dominio (~USD 12 al año).
    - `NEXT_PUBLIC_SITE_URL` = `https://<dominio>` (sin barra final)
    - Opcional: `NEXT_PUBLIC_STRIPE_PAYMENT_LINK` para cobrar con tarjeta en el carrito.
 3. Dominio: Settings → Domains → agregar `<dominio>` y `www.<dominio>`.
+4. Aviso por correo de comentarios nuevos (opcional, recomendado): en Resend agregar y verificar
+   `<dominio>` (registros DNS), crear una API key y poner en Vercel `RESEND_API_KEY`,
+   `CORREO_AVISOS` (correo de Wagner) y `CORREO_REMITENTE` (`Tu página <avisos@<dominio>>`).
+   El correo trae un botón que lo lleva directo a aprobar el comentario.
 
 No hace falta la clave de servicio de Supabase: todo pasa por los permisos (RLS) de la base.
 

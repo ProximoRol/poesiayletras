@@ -259,7 +259,17 @@ footer.pie { border-top: 1px solid var(--borde); padding: 52px 0 40px; backgroun
 .cart-total { display: flex; justify-content: space-between; font-family: var(--serif); font-size: 1.3rem; }
 
 /* ── PANEL ── */
-.panel { min-height: 100vh; background: var(--crema); }
+/* Panel en tamaño grande: el autor no es muy tecnológico. Todo (letra, botones, campos)
+   crece parejo con zoom, sin tocar cada regla. */
+.panel { --zoom: 1.2; zoom: var(--zoom); min-height: calc(100vh / var(--zoom)); background: var(--crema); }
+.panel input, .panel textarea, .panel select { padding: 13px 16px; }
+.panel .btn { padding: 14px 26px; }
+.panel .btn-chico { padding: 10px 18px; font-size: 0.92rem; }
+.boton-grande { display: flex; align-items: center; gap: 18px; width: 100%; padding: 24px 28px; border-radius: 20px; background: var(--terracota); color: #fff; font-family: var(--serif); font-size: 1.5rem; box-shadow: 0 12px 30px rgba(184, 98, 47, 0.28); transition: background 0.2s, transform 0.15s; }
+.boton-grande:hover { background: var(--terracota-osc); transform: translateY(-2px); }
+.boton-grande small { display: block; font-family: var(--sans); font-size: 0.9rem; opacity: 0.85; }
+.boton-grande .ic { font-size: 2rem; }
+.aviso-pendientes { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; background: #f7e3c4; color: #7a4a10; border-radius: 16px; padding: 16px 22px; margin-top: 16px; font-size: 1.05rem; }
 .panel-nav { background: var(--tinta); color: var(--crema); }
 .panel-nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 62px; gap: 16px; }
 .panel-nav nav { display: flex; gap: 22px; font-size: 0.92rem; align-items: center; flex-wrap: wrap; }
@@ -294,6 +304,7 @@ footer.pie { border-top: 1px solid var(--borde); padding: 52px 0 40px; backgroun
 .login { max-width: 400px; margin: 0 auto; padding: 90px 24px; }
 
 @media (max-width: 900px) {
+  .panel { --zoom: 1.08; }
   .hero-grid, .sobre-grid, .libro { grid-template-columns: 1fr; gap: 36px; }
   .retrato { max-width: 380px; margin: 0 auto; width: 100%; }
   .sobre-grid .foto { max-width: 280px; margin: 0 auto; }

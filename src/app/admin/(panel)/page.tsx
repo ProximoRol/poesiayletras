@@ -7,19 +7,32 @@ import type { Texto } from "@/server/tipos";
 export default async function MisTextos({ searchParams }: { searchParams: Promise<{ aviso?: string }> }) {
   const { aviso } = await searchParams;
   const db = await usuario();
-  const { data } = await db.from("textos").select("id, slug, titulo, categoria, estado, publicado_en, actualizado_en").order("actualizado_en", { ascending: false });
+  const [{ data }, { count: pendientes }] = await Promise.all([
+    db.from("textos").select("id, slug, titulo, categoria, estado, publicado_en, actualizado_en").order("actualizado_en", { ascending: false }),
+    db.from("comentarios").select("id", { count: "exact", head: true }).eq("estado", "pendiente"),
+  ]);
   const textos = (data ?? []) as Texto[];
 
   return (
     <>
-      <div className="panel-cabeza">
-        <div>
-          <h1>Mis textos</h1>
-          <p className="muted">Escribe, guarda como borrador y publica cuando quieras.</p>
-        </div>
-        <Link href="/admin/textos/nuevo" className="btn btn-primary">+ Escribir un texto nuevo</Link>
-      </div>
       {aviso && <p className="aviso exito" style={{ marginBottom: 18 }}>{aviso}</p>}
+
+      <Link href="/admin/textos/nuevo" className="boton-grande">
+        <span className="ic" aria-hidden>✍️</span>
+        <span>
+          Escribir un texto nuevo
+          <small>Un poema, un cuento o lo que quieras compartir</small>
+        </span>
+      </Link>
+
+      {!!pendientes && (
+        <div className="aviso-pendientes">
+          <span>💬 Tienes {pendientes === 1 ? "1 comentario nuevo" : `${pendientes} comentarios nuevos`} por revisar</span>
+          <Link href="/admin/comentarios" className="btn btn-oscuro btn-chico">Ver comentarios</Link>
+        </div>
+      )}
+
+      <h1 style={{ margin: "40px 0 14px" }}>Lo que ya escribiste</h1>
       <div className="caja">
         {!textos.length ? (
           <p className="muted centro" style={{ padding: 30 }}>Todavía no hay textos. ¡Empieza con el primero!</p>

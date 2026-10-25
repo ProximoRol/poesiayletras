@@ -1,7 +1,9 @@
 import "server-only";
 
+import { cantidadTexto } from "@/lib/correccion";
 import { formatoCLP } from "@/lib/dinero";
 import { env } from "./env";
+import type { Encargo } from "./tipos";
 
 // Correos (API de Resend, sin dependencias):
 //  · al autor: comentario nuevo y pedido pagado, con un botón directo al panel;
@@ -108,4 +110,32 @@ export async function avisarPedidoEnviado(p: PedidoCorreo, autor: string): Promi
      <p style="color:#5b4f45;font-size:15px">¡Que lo disfrutes!</p>`,
     correoAutor()[0],
   );
+}
+
+// ── Corrección literaria ────────────────────────────────────────────────────
+
+export async function avisarEncargoPagado(e: Encargo, autor: string): Promise<void> {
+  const detalle = `${escapar(e.servicio)}${e.unidad === "fijo" ? "" : ` · ${cantidadTexto(e.unidad, e.cantidad)}`} — <b>${formatoCLP(e.total)}</b>`;
+  await Promise.all([
+    enviar(
+      correoAutor(),
+      `Nueva corrección pagada #${e.numero} — ${e.nombre}`,
+      `<p style="font-size:22px;margin:0 0 16px">Te encargaron una corrección ✍️ #${e.numero}</p>
+       <p style="margin:0 0 6px">${detalle}</p>
+       ${cita(`${escapar(e.nombre)}<br>${escapar(e.correo)} · Tel. ${escapar(e.telefono)}`)}
+       ${e.notas ? `<p style="margin:16px 0 6px">Lo que te cuenta:</p>${cita(escapar(e.notas))}` : ""}
+       ${boton(`${env.sitio}/admin/correccion`, "Ver el encargo y descargar el texto")}
+       <p style="color:#5b4f45;font-size:15px">Cuando le devuelvas el texto corregido (respondiendo este correo), aprieta «Marcar como entregado».</p>`,
+      e.correo,
+    ),
+    enviar(
+      [e.correo],
+      `Recibimos tu encargo de corrección #${e.numero}`,
+      `<p style="font-size:22px;margin:0 0 16px">¡Gracias, ${escapar(e.nombre.split(" ")[0])}!</p>
+       <p>Tu pago fue recibido. ${escapar(autor)} ya tiene tu texto y te lo devolverá corregido a este correo.</p>
+       <p style="margin:16px 0">${detalle}</p>
+       <p style="color:#5b4f45;font-size:15px">Si quieres agregar algo, responde este correo.</p>`,
+      correoAutor()[0],
+    ),
+  ]);
 }

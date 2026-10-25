@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { VaciarCarrito } from "@/components/Carrito";
+import { EmpujarCompra } from "@/components/IdsVisita";
 import { formatoCLP } from "@/lib/dinero";
 import { perfil } from "@/server/datos";
 import { hayPagos } from "@/server/env";
@@ -27,6 +28,7 @@ export default async function PaginaPedido({ params, searchParams }: Props) {
     <section style={{ paddingTop: 60 }}>
       <div className="estrecho centro">
         {pagado && <VaciarCarrito />}
+        {pagado && <EmpujarCompra id={pedido.id} valor={pedido.total} items={pedido.items.map((i) => ({ item_id: i.nombre, item_name: i.nombre, price: i.precio, quantity: i.cantidad }))} />}
         <span className="eyebrow">Pedido #{pedido.numero}</span>
         {pagado ? (
           <>

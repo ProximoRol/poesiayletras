@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Compartir } from "@/components/Compartir";
 import { FormComentario } from "@/components/FormComentario";
+import { FinDelTexto, RastrearAlVer } from "@/components/Instrumentacion";
 import { Obra } from "@/components/Obra";
 import { TarjetaTexto } from "@/components/TarjetaTexto";
 import { minutosLectura, sinMarcas } from "@/domain/textos";
@@ -54,8 +55,10 @@ export default async function PaginaTexto({ params }: Props) {
           // eslint-disable-next-line @next/next/no-img-element
           <img className="portada" src={imagen} alt="" />
         )}
+        <RastrearAlVer tipo="text_view" objeto={texto.slug} capa={{ evento: "text_view", params: { text_slug: texto.slug, text_title: texto.titulo, text_theme: texto.tema?.nombre ?? null } }} />
         <Obra cuerpo={texto.cuerpo} formato={texto.tema?.formato ?? "prosa"} />
         <p className="firma">— {p.nombre}</p>
+        <FinDelTexto slug={texto.slug} />
 
         <Compartir url={`${env.sitio}/textos/${texto.slug}`} titulo={texto.titulo} />
 

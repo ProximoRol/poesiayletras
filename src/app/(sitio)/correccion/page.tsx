@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { enlaceWhatsApp } from "@/lib/contacto";
-import { perfil } from "@/server/datos";
+import { UNIDADES } from "@/lib/correccion";
+import { formatoCLP } from "@/lib/dinero";
+import { perfil, serviciosVisibles } from "@/server/datos";
+import { hayPagos } from "@/server/env";
 
 export const revalidate = 300;
 export const metadata: Metadata = {
@@ -17,26 +21,9 @@ const CUIDADOS = [
   ["🎨", "Sugerencias de estilo", "Propongo mejoras de estilo respetando siempre tu voz como autor. Tú tienes la última palabra."],
 ];
 
-const PLANES = [
-  {
-    nombre: "Poema suelto", precio: 8, unidad: "/ poema", nota: "Hasta 40 versos",
-    desc: "Corrección de un poema individual: ortografía, puntuación y ritmo.",
-    incluye: ["Ortografía y gramática", "Puntuación y mayúsculas", "Ritmo y musicalidad", "Comentarios de estilo"],
-  },
-  {
-    nombre: "Poemario · Cuento", precio: 5, unidad: "/ página", nota: "Mínimo 5 páginas · devolución con notas", destacado: true,
-    desc: "Revisión completa de un conjunto de poemas o un cuento corto.",
-    incluye: ["Todo lo del plan anterior", "Fluidez y claridad global", "Repeticiones y redundancias", "Informe con sugerencias", "Una ronda de ajustes incluida"],
-  },
-  {
-    nombre: "Acompañamiento", precio: 60, unidad: "/ proyecto", nota: "Presupuesto según extensión",
-    desc: "Lectura crítica y corrección de tu manuscrito para concursos o publicación.",
-    incluye: ["Corrección integral", "Lectura crítica del conjunto", "Recomendaciones para concursos", "Dos rondas de ajustes", "Sesión de comentarios"],
-  },
-];
-
 export default async function Correccion() {
-  const p = await perfil();
+  const [p, planes] = await Promise.all([perfil(), serviciosVisibles()]);
+  const pagos = hayPagos();
   const wa = enlaceWhatsApp(p.whatsapp, `¡Hola ${p.nombre.split(" ")[0]}! Me interesa tu servicio de corrección literaria. Quisiera contarte sobre mi texto.`);
 
   return (
@@ -98,31 +85,34 @@ export default async function Correccion() {
           <div className="sec-head center">
             <span className="eyebrow">Servicios</span>
             <h2>Elige cómo quieres que cuide tu obra</h2>
-            <p>Escríbeme, cuéntame qué escribiste y te digo plazo y precio exacto.</p>
+            <p>Elige el plan, sube tu texto y paga en línea. Si tienes dudas, escríbeme antes.</p>
           </div>
           <div className="plans">
-            {PLANES.map((pl) => (
-              <div key={pl.nombre} className={`plan${pl.destacado ? " destacado" : ""}`}>
-                {pl.destacado && <span className="badge">Más elegido</span>}
-                <h3>{pl.nombre}</h3>
-                <p className="desc">{pl.desc}</p>
-                <div className="price">${pl.precio} <small>{pl.unidad}</small></div>
-                <div className="price-note">{pl.nota}</div>
-                <ul>
-                  {pl.incluye.map((i) => <li key={i}>{i}</li>)}
-                </ul>
-                {wa && (
-                  <a
-                    href={enlaceWhatsApp(p.whatsapp, `¡Hola ${p.nombre.split(" ")[0]}! Me interesa la corrección «${pl.nombre}». Te cuento sobre mi texto:`)!}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`btn ${pl.destacado ? "btn-primary" : "btn-ghost"}`}
-                  >
-                    Consultar por WhatsApp
-                  </a>
-                )}
-              </div>
-            ))}
+            {planes.map((pl) => {
+              const consulta = enlaceWhatsApp(p.whatsapp, `¡Hola ${p.nombre.split(" ")[0]}! Me interesa la corrección «${pl.nombre}». Te cuento sobre mi texto:`);
+              const clase = `btn ${pl.destacado ? "btn-primary" : "btn-ghost"}`;
+              return (
+                <div key={pl.id} className={`plan${pl.destacado ? " destacado" : ""}`}>
+                  {pl.destacado && <span className="badge">Más elegido</span>}
+                  <h3>{pl.nombre}</h3>
+                  <p className="desc">{pl.descripcion}</p>
+                  {pl.precio !== null ? (
+                    <div className="price">{formatoCLP(pl.precio)} <small>{UNIDADES[pl.unidad].por}</small></div>
+                  ) : (
+                    <div className="price" style={{ fontSize: "2rem" }}>A convenir</div>
+                  )}
+                  {pl.nota && <div className="price-note">{pl.nota}</div>}
+                  <ul>
+                    {pl.incluye.map((i) => <li key={i}>{i}</li>)}
+                  </ul>
+                  {pl.precio !== null && pagos ? (
+                    <Link href={`/correccion/contratar/${pl.id}`} className={clase} data-track="contratar" data-track-plan={pl.nombre}>Contratar y pagar</Link>
+                  ) : consulta ? (
+                    <a href={consulta} target="_blank" rel="noopener noreferrer" className={clase} data-track="whatsapp" data-track-donde="correccion_plan" data-track-plan={pl.nombre}>Consultar por WhatsApp</a>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -134,7 +124,7 @@ export default async function Correccion() {
             <p>Envíame tu poema o cuento y recibe una muestra de corrección de las primeras líneas, sin compromiso.</p>
             {wa && (
               <div className="acciones">
-                <a href={wa} target="_blank" rel="noopener noreferrer" className="btn btn-wa">Escríbeme por WhatsApp</a>
+                <a href={wa} target="_blank" rel="noopener noreferrer" className="btn btn-wa" data-track="whatsapp" data-track-donde="correccion">Escríbeme por WhatsApp</a>
               </div>
             )}
           </div>

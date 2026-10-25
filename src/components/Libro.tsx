@@ -31,7 +31,7 @@ export function VitrinaLibro({ libro, producto, whatsapp, autor }: { libro: Libr
         )}
         {pedir && (
           <div className="acciones">
-            <a href={pedir} target="_blank" rel="noopener noreferrer" className="btn btn-wa">Pídelo por WhatsApp</a>
+            <a href={pedir} target="_blank" rel="noopener noreferrer" className="btn btn-wa" data-track="whatsapp" data-track-donde="libro">Pídelo por WhatsApp</a>
           </div>
         )}
         {libro.enlaces.length > 0 && (

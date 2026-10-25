@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { aSlug, esFormato, extracto, NUEVO_TEMA, slugLibre, type Formato } from "@/domain/textos";
+import { esUnidad } from "@/lib/correccion";
 import { avisarPedidoEnviado, type PedidoCorreo } from "../avisos";
 import { usuario } from "../supabase";
 import type { EnlaceCompra } from "../tipos";
@@ -356,5 +357,53 @@ export async function cancelarPedido(form: FormData) {
   await exigirAutor();
   const db = await usuario();
   await db.from("pedidos").update({ estado: "cancelado" }).eq("id", txt(form, "id")).eq("estado", "pendiente_pago");
+  revalidatePath("/admin", "layout");
+}
+
+// ── Corrección literaria ────────────────────────────────────────────────────
+
+export async function guardarServicio(_previo: Resultado, form: FormData): Promise<Resultado> {
+  await exigirAutor();
+  const db = await usuario();
+  const id = txt(form, "id");
+  const nombre = txt(form, "nombre");
+  if (!nombre) return { ok: false, error: "Ponle un nombre al plan." };
+  const unidad = txt(form, "unidad");
+  if (!esUnidad(unidad)) return { ok: false, error: "Elige cómo se cobra el plan." };
+  const precioTxt = txt(form, "precio").replace(/[^\d]/g, "");
+  const precio = precioTxt === "" ? null : Number(precioTxt);
+  if (precio !== null && precio < 100) return { ok: false, error: "Escribe el precio en pesos, por ejemplo 5000, o déjalo vacío para que lo consulten por WhatsApp." };
+  const minimo = unidad === "fijo" ? 1 : Math.max(1, Number(txt(form, "minimo").replace(/[^\d]/g, "")) || 1);
+
+  const datos = {
+    nombre,
+    descripcion: txt(form, "descripcion").slice(0, 400),
+    incluye: String(form.get("incluye") ?? "").split("\n").map((l) => l.trim()).filter(Boolean).slice(0, 12),
+    precio,
+    unidad,
+    minimo,
+    nota: txt(form, "nota").slice(0, 120),
+    destacado: form.get("destacado") === "on",
+    visible: form.get("visible") === "on",
+  };
+  const { error } = id ? await db.from("servicios").update(datos).eq("id", id) : await db.from("servicios").insert(datos);
+  if (error) return { ok: false, error: "No se pudo guardar el plan." };
+  refrescarSitio();
+  if (!id) redirect("/admin/correccion?aviso=" + encodeURIComponent("Plan agregado."));
+  return { ok: true, aviso: "Plan guardado." };
+}
+
+export async function borrarServicio(form: FormData) {
+  await exigirAutor();
+  const db = await usuario();
+  await db.from("servicios").delete().eq("id", txt(form, "id"));
+  refrescarSitio();
+  redirect("/admin/correccion?aviso=" + encodeURIComponent("Plan borrado."));
+}
+
+export async function marcarEntregado(form: FormData) {
+  await exigirAutor();
+  const db = await usuario();
+  await db.from("encargos").update({ estado: "entregado", entregado_en: new Date().toISOString() }).eq("id", txt(form, "id")).eq("estado", "pagado");
   revalidatePath("/admin", "layout");
 }

@@ -46,13 +46,16 @@ async function flow<T>(ruta: string, params: Record<string, string>, metodo: "GE
   return (await res.json()) as T;
 }
 
-/** Crea el cobro del pedido y devuelve a dónde mandar al comprador. */
-export async function crearCobro(p: { pedidoId: string; numero: number; total: number; correo: string; autor: string }): Promise<{ token: string; url: string }> {
+/**
+ * Crea el cobro y devuelve a dónde mandar al comprador. `orden` es el id del pedido, o
+ * `E-<id>` para un encargo de corrección (así la confirmación sabe cuál es).
+ */
+export async function crearCobro(p: { orden: string; asunto: string; total: number; correo: string }): Promise<{ token: string; url: string }> {
   const r = await flow<{ url: string; token: string; flowOrder: number }>(
     "/payment/create",
     {
-      commerceOrder: p.pedidoId,
-      subject: `Pedido #${p.numero} · ${p.autor}`.slice(0, 120),
+      commerceOrder: p.orden,
+      subject: p.asunto.slice(0, 120),
       currency: "CLP",
       amount: String(p.total),
       email: p.correo,

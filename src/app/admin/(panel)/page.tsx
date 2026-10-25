@@ -7,7 +7,7 @@ import type { Texto } from "@/server/tipos";
 export default async function MisTextos({ searchParams }: { searchParams: Promise<{ aviso?: string; tema?: string }> }) {
   const { aviso, tema } = await searchParams;
   const db = await usuario();
-  const [{ data }, { pendientes, semana, porEnviar }] = await Promise.all([
+  const [{ data }, { pendientes, semana, porEnviar, porCorregir }] = await Promise.all([
     db.from("textos").select("id, slug, titulo, categoria, tema:temas(nombre, formato), estado, publicado_en, actualizado_en").order("actualizado_en", { ascending: false }),
     resumenPanel(db),
   ]);
@@ -33,6 +33,13 @@ export default async function MisTextos({ searchParams }: { searchParams: Promis
         <div className="aviso-pendientes" style={{ background: "var(--exito-fondo)", color: "var(--exito)" }}>
           <span>📦 {porEnviar === 1 ? "Tienes 1 pedido pagado" : `Tienes ${porEnviar} pedidos pagados`} por enviar</span>
           <Link href="/admin/pedidos" className="btn btn-oscuro btn-chico">Ver pedidos</Link>
+        </div>
+      )}
+
+      {porCorregir > 0 && (
+        <div className="aviso-pendientes" style={{ background: "var(--exito-fondo)", color: "var(--exito)" }}>
+          <span>✍️ {porCorregir === 1 ? "Tienes 1 corrección pagada" : `Tienes ${porCorregir} correcciones pagadas`} por entregar</span>
+          <Link href="/admin/correccion" className="btn btn-oscuro btn-chico">Ver correcciones</Link>
         </div>
       )}
 

@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import { BotonAgregar } from "@/components/Carrito";
 import { enlaceWhatsApp } from "@/lib/contacto";
 import { formatoCLP } from "@/lib/dinero";
-import { perfil, productosVisibles } from "@/server/datos";
+import { librosVisibles, perfil, productosVisibles } from "@/server/datos";
 import { urlImagen } from "@/server/supabase";
 
 export const revalidate = 300;
 export const metadata: Metadata = { title: "Tienda", description: "Sus libros y más, con envío a todo Chile." };
 
 export default async function Tienda() {
-  const [productos, p] = await Promise.all([productosVisibles(), perfil()]);
+  const [productos, p, libros] = await Promise.all([productosVisibles(), perfil(), librosVisibles()]);
   const wa = enlaceWhatsApp(p.whatsapp, `¡Hola ${p.nombre.split(" ")[0]}! Tengo una consulta sobre la tienda.`);
 
   return (
@@ -27,7 +27,8 @@ export default async function Tienda() {
         ) : (
           <div className="grid-tienda">
             {productos.map((pr) => {
-              const foto = urlImagen(pr.foto);
+              // Sin foto propia, un producto que es un libro muestra la portada del libro.
+              const foto = urlImagen(pr.foto ?? libros.find((l) => l.id === pr.libro_id)?.portada ?? null);
               return (
                 <div key={pr.id} className="producto">
                   {foto ? (
@@ -54,7 +55,7 @@ export default async function Tienda() {
             <h2>¿Buscas algo especial?</h2>
             <p>Un ejemplar dedicado, varios para regalar o un pedido para tu librería: escríbeme.</p>
             <div className="acciones">
-              <a href={wa} target="_blank" rel="noopener noreferrer" className="btn btn-wa">Escríbeme por WhatsApp</a>
+              <a href={wa} target="_blank" rel="noopener noreferrer" className="btn btn-wa" data-track="whatsapp" data-track-donde="tienda">Escríbeme por WhatsApp</a>
             </div>
           </div>
         )}

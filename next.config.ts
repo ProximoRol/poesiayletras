@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Las imágenes se suben desde el navegador directo a Storage; las acciones solo mueven texto.
-  experimental: { serverActions: { bodySizeLimit: "1mb" } },
+  // Las imágenes se suben desde el navegador directo a Storage. La única acción con archivo es
+  // contratar una corrección (texto del cliente, máx. 4 MB; Vercel no recibe más de 4,5 MB).
+  experimental: { serverActions: { bodySizeLimit: "5mb" } },
   async headers() {
     return [
       {

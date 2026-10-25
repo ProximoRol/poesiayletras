@@ -23,8 +23,8 @@ export default async function Portada() {
             </h1>
             <p className="lead">{p.presentacion || p.frase}</p>
             <div className="acciones">
-              <Link href="/textos" className="btn btn-primary">Leer mis textos</Link>
-              {libros.length > 0 && <Link href="/libros" className="btn btn-ghost">Conoce mi libro</Link>}
+              <Link href="/textos" className="btn btn-primary" data-track="portada_leer">Leer mis textos</Link>
+              {libros.length > 0 && <Link href="/libros" className="btn btn-ghost" data-track="portada_libro">Conoce mi libro</Link>}
             </div>
           </div>
           <div className="retrato">

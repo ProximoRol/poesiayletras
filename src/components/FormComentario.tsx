@@ -1,12 +1,19 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { capaDatos, rastrear } from "@/lib/rastreo";
 import { comentar, type EstadoComentario } from "@/server/comentar";
 
 export function FormComentario({ textoId, autor }: { textoId: string; autor: string }) {
   const [estado, enviar, enviando] = useActionState<EstadoComentario, FormData>(comentar, null);
   // Hora en que se abrió la página: si el envío llega demasiado rápido, es un robot.
   const [abierto] = useState(() => Date.now());
+  const comento = Boolean(estado?.ok);
+  useEffect(() => {
+    if (!comento) return;
+    rastrear("comment_sent");
+    capaDatos("comment_sent", { page_path: location.pathname });
+  }, [comento]);
 
   if (estado?.ok) {
     return (

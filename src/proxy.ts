@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { COOKIE_EQUIPO } from "@/domain/analitica";
 
 // Solo el panel: refresca la sesión de Supabase y manda a /admin/login si no hay usuario.
 // La autorización real (¿es el autor?) se vuelve a comprobar en cada página y acción del
@@ -30,6 +31,10 @@ export async function proxy(req: NextRequest) {
     // Después de entrar vuelve a donde iba (p. ej. el botón del correo de aviso).
     destino.search = req.nextUrl.pathname === "/admin" ? "" : `?volver=${encodeURIComponent(req.nextUrl.pathname)}`;
     return NextResponse.redirect(destino);
+  }
+  // Quien entra al panel es de la familia: sus visitas a la página no se miden.
+  if (data.user && req.cookies.get(COOKIE_EQUIPO)?.value !== "1") {
+    res.cookies.set(COOKIE_EQUIPO, "1", { maxAge: 60 * 60 * 24 * 365, path: "/", sameSite: "lax", secure: req.nextUrl.protocol === "https:" });
   }
   return res;
 }

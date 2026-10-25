@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { REGIONES } from "@/lib/dinero";
+import { visitaDelPago } from "./analitica";
 import { perfil } from "./datos";
 import { hayPagos } from "./env";
 import { crearCobro, type ItemCobro } from "./flow";
@@ -52,8 +53,9 @@ export async function comprar(_previo: EstadoCompra, form: FormData): Promise<Es
 
   let url: string;
   try {
-    const cobro = await crearCobro({ pedidoId: data.id, numero: data.numero, total: data.total, correo: datos.correo, autor: (await perfil()).nombre });
-    await servicio().from("pedidos").update({ pago_token: cobro.token }).eq("id", data.id);
+    const cobro = await crearCobro({ orden: data.id, asunto: `Pedido #${data.numero} · ${(await perfil()).nombre}`, total: data.total, correo: datos.correo });
+    const visita = await visitaDelPago(form);
+    await servicio().from("pedidos").update({ pago_token: cobro.token, visitante_id: visita.vid, sesion_id: visita.sid }).eq("id", data.id);
     url = cobro.url;
   } catch (e) {
     console.error("[comprar] Flow no respondió", e);

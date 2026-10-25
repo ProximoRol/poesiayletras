@@ -26,7 +26,7 @@ export function VitrinaLibro({ libro, producto, whatsapp, autor }: { libro: Libr
           <div className="acciones" style={{ alignItems: "center" }}>
             <span className="serif" style={{ fontSize: "1.8rem" }}>{formatoCLP(producto.precio)}</span>
             <BotonAgregar id={producto.id} agotado={producto.stock === 0} texto="Comprar" clase="btn btn-primary" />
-            <small className="muted" style={{ flexBasis: "100%" }}>Pago con Mercado Pago · envío a todo Chile por pagar</small>
+            <small className="muted" style={{ flexBasis: "100%" }}>Pago con tarjeta o transferencia · envío a todo Chile por pagar</small>
           </div>
         )}
         {pedir && (

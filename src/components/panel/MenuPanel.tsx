@@ -15,7 +15,7 @@ const ITEMS = [
 
 export function MenuPanel({ comentarios, pedidos }: { comentarios: number; pedidos: number }) {
   const ruta = usePathname();
-  const activo = (href: string) => (href === "/admin" ? ruta === "/admin" || ruta.startsWith("/admin/textos") : ruta.startsWith(href));
+  const activo = (href: string) => (href === "/admin" ? ruta === "/admin" || ruta.startsWith("/admin/textos") || ruta.startsWith("/admin/temas") : ruta.startsWith(href));
 
   return (
     <header className="panel-nav">

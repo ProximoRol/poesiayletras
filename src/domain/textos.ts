@@ -1,14 +1,17 @@
-// Reglas puras del blog: categorías, slugs, extractos y el formato del texto.
+// Reglas puras del blog: temas, slugs, extractos y el formato del texto.
 // Sin dependencias de Next ni de Supabase, para poder probarlas solas.
 
-export const CATEGORIAS = {
-  poesia: "Poesía",
-  cuento: "Cuento",
-  ensayo: "Ensayo",
-  reflexion: "Reflexión",
-} as const;
-export type Categoria = keyof typeof CATEGORIAS;
-export const esCategoria = (v: unknown): v is Categoria => typeof v === "string" && v in CATEGORIAS;
+/** Tema de un texto (Poesía, Cuento…). El autor los edita; el slug no cambia al renombrar. */
+export type Formato = "verso" | "prosa";
+export interface Tema {
+  slug: string;
+  nombre: string;
+  formato: Formato;
+  orden: number;
+}
+export const esFormato = (v: unknown): v is Formato => v === "verso" || v === "prosa";
+/** Valor del selector de tema que significa «crear uno nuevo ahí mismo». */
+export const NUEVO_TEMA = "__nuevo";
 
 /** «Canción del árbol, otra vez» → «cancion-del-arbol-otra-vez». */
 export function aSlug(titulo: string): string {
@@ -37,13 +40,13 @@ export function sinMarcas(cuerpo: string): string {
 }
 
 /**
- * Extracto para tarjetas y al compartir. En poesía conserva los primeros versos (con su salto
+ * Extracto para tarjetas y al compartir. En verso conserva los primeros versos (con su salto
  * de línea); en prosa, las primeras frases hasta ~`max` caracteres.
  */
-export function extracto(cuerpo: string, categoria: Categoria, max = 220): string {
+export function extracto(cuerpo: string, formato: Formato, max = 220): string {
   const limpio = sinMarcas(cuerpo).replace(/\r\n?/g, "\n").trim();
   if (!limpio) return "";
-  if (categoria === "poesia") {
+  if (formato === "verso") {
     const versos = limpio.split("\n").map((v) => v.trim()).filter(Boolean);
     const elegidos: string[] = [];
     let largo = 0;

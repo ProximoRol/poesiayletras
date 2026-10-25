@@ -5,7 +5,7 @@ import { Compartir } from "@/components/Compartir";
 import { FormComentario } from "@/components/FormComentario";
 import { Obra } from "@/components/Obra";
 import { TarjetaTexto } from "@/components/TarjetaTexto";
-import { CATEGORIAS, minutosLectura, sinMarcas } from "@/domain/textos";
+import { minutosLectura, sinMarcas } from "@/domain/textos";
 import { fechaLarga } from "@/lib/contacto";
 import { comentariosAprobados, perfil, textoPublicado, textosPublicados } from "@/server/datos";
 import { env } from "@/server/env";
@@ -43,18 +43,18 @@ export default async function PaginaTexto({ params }: Props) {
     <article className="lectura">
       <div className="estrecho">
         <header>
-          <span className="eyebrow">{CATEGORIAS[texto.categoria]}</span>
+          <span className="eyebrow">{texto.tema?.nombre}</span>
           <h1>{texto.titulo}</h1>
           <p className="meta">
             {fechaLarga(texto.publicado_en)}
-            {texto.categoria !== "poesia" && ` · ${minutosLectura(texto.cuerpo)} min de lectura`}
+            {texto.tema?.formato !== "verso" && ` · ${minutosLectura(texto.cuerpo)} min de lectura`}
           </p>
         </header>
         {imagen && (
           // eslint-disable-next-line @next/next/no-img-element
           <img className="portada" src={imagen} alt="" />
         )}
-        <Obra cuerpo={texto.cuerpo} categoria={texto.categoria} />
+        <Obra cuerpo={texto.cuerpo} formato={texto.tema?.formato ?? "prosa"} />
         <p className="firma">— {p.nombre}</p>
 
         <Compartir url={`${env.sitio}/textos/${texto.slug}`} titulo={texto.titulo} />

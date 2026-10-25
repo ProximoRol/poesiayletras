@@ -3,7 +3,7 @@ import "server-only";
 import { revalidatePath } from "next/cache";
 import { avisarPedidoPagado, type PedidoCorreo } from "./avisos";
 import { perfil } from "./datos";
-import { leerPago } from "./mercadopago";
+import { leerEstado } from "./flow";
 import { servicio } from "./supabase";
 
 export interface PedidoPublico extends PedidoCorreo {
@@ -19,26 +19,29 @@ export async function pedidoPorId(id: string): Promise<PedidoPublico | null> {
   return data as PedidoPublico | null;
 }
 
+export type ResultadoPago = { pedidoId: string; estado: "pagado" | "pendiente" | "rechazado" };
+
 /**
- * Confirma un pago leyéndolo directo a Mercado Pago (nunca se confía en lo que diga el aviso o
- * la URL). Si está aprobado y cubre el total, marca el pedido pagado, descuenta stock y avisa
- * por correo — una sola vez aunque Mercado Pago repita el aviso.
+ * Confirma un pago leyéndolo directo a Flow con el token (nunca se confía en lo que diga el
+ * aviso o la URL). Si está pagado y cubre el total, marca el pedido pagado, descuenta stock y
+ * avisa por correo — una sola vez aunque Flow repita el aviso.
  */
-export async function procesarPago(pagoId: string, { revalidar = true } = {}): Promise<void> {
-  const pago = await leerPago(pagoId);
-  if (pago.status !== "approved" || !pago.external_reference || pago.currency_id !== "CLP") return;
+export async function procesarPago(token: string): Promise<ResultadoPago> {
+  const pago = await leerEstado(token);
+  const pedidoId = pago.commerceOrder;
+  if (pago.status === 3 || pago.status === 4) return { pedidoId, estado: "rechazado" };
+  if (pago.status !== 2 || pago.currency !== "CLP") return { pedidoId, estado: "pendiente" };
 
   const { data: primeraVez, error } = await servicio().rpc("confirmar_pago", {
-    p_pedido: pago.external_reference,
-    p_pago: String(pago.id),
-    p_monto: Math.floor(pago.transaction_amount),
+    p_pedido: pedidoId,
+    p_pago: String(pago.flowOrder),
+    p_monto: Math.floor(Number(pago.amount)),
   });
   if (error) throw error;
-  if (!primeraVez) return;
-
-  // Stock nuevo en la tienda. No se puede revalidar mientras se dibuja una página (la de vuelta
-  // del pago): ahí se actualiza sola en ≤5 min o con el aviso de Mercado Pago.
-  if (revalidar) revalidatePath("/", "layout");
-  const pedido = await pedidoPorId(pago.external_reference);
-  if (pedido) await avisarPedidoPagado(pedido, (await perfil()).nombre);
+  if (primeraVez) {
+    revalidatePath("/", "layout"); // stock nuevo en la tienda
+    const pedido = await pedidoPorId(pedidoId);
+    if (pedido) await avisarPedidoPagado(pedido, (await perfil()).nombre);
+  }
+  return { pedidoId, estado: "pagado" };
 }

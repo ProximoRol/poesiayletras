@@ -69,7 +69,7 @@ export function FormCompra({ pagosActivos, whatsapp }: { pagosActivos: boolean; 
       {estado && !estado.ok && <p className="aviso error">{estado.error}</p>}
       {pagosActivos ? (
         <button type="submit" className="btn btn-primary" disabled={enviando} style={{ fontSize: "1.05rem", padding: "16px 28px" }}>
-          {enviando ? "Llevándote a Mercado Pago…" : `Pagar ${formatoCLP(total)} con Mercado Pago`}
+          {enviando ? "Llevándote a pagar…" : `Pagar ${formatoCLP(total)}`}
         </button>
       ) : (
         <p className="aviso info">
@@ -77,7 +77,7 @@ export function FormCompra({ pagosActivos, whatsapp }: { pagosActivos: boolean; 
           {whatsapp && <> Mientras tanto, <a className="enlace" href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer">pídelo por WhatsApp</a>.</>}
         </p>
       )}
-      <small className="muted">Vas a pagar en el sitio de Mercado Pago (tarjeta de crédito, débito o transferencia). No guardamos datos de tarjetas.</small>
+      <small className="muted">Vas a pagar en Flow, el sistema de pago seguro (tarjeta de crédito, débito o transferencia). No guardamos datos de tarjetas.</small>
     </form>
   );
 }

@@ -5,18 +5,19 @@ import "server-only";
 export const env = {
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
   supabaseAnon: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
-  // Solo para confirmar pagos (aviso de Mercado Pago y página de vuelta). Nunca en el panel.
+  // Solo para confirmar pagos (aviso de Flow y vuelta del pago). Nunca en el panel.
   supabaseServicio: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
-  mpToken: process.env.MERCADOPAGO_ACCESS_TOKEN ?? "",
-  mpSecreto: process.env.MERCADOPAGO_WEBHOOK_SECRET ?? "",
-  // Solo para pruebas locales con un Mercado Pago simulado (scripts/mp-falso.mjs).
-  mpApi: (process.env.MERCADOPAGO_API_URL ?? "https://api.mercadopago.com").replace(/\/$/, ""),
+  // Cuenta de Flow del autor (flow.cl → Integración → Credenciales).
+  flowApiKey: process.env.FLOW_API_KEY ?? "",
+  flowSecreto: process.env.FLOW_SECRET_KEY ?? "",
+  // https://sandbox.flow.cl/api para pruebas; en local, el Flow simulado (scripts/flow-falso.mjs).
+  flowApi: (process.env.FLOW_API_URL ?? "https://www.flow.cl/api").replace(/\/$/, ""),
   sitio: (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3110").replace(/\/$/, ""),
 };
 
 export const hayBase = () => Boolean(env.supabaseUrl && env.supabaseAnon);
-/** Pagos activos: hace falta la cuenta de Mercado Pago y la clave para confirmar pedidos. */
-export const hayPagos = () => Boolean(hayBase() && env.mpToken && env.supabaseServicio);
+/** Pagos activos: hace falta la cuenta de Flow y la clave para confirmar pedidos. */
+export const hayPagos = () => Boolean(hayBase() && env.flowApiKey && env.flowSecreto && env.supabaseServicio);
 
 export function exigir(nombre: keyof typeof env): string {
   const valor = env[nombre];

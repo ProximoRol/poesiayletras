@@ -35,10 +35,10 @@ describe("formato", () => {
 
 describe("extracto", () => {
   it("en poesía guarda los primeros versos", () => {
-    expect(extracto("a\nb\nc\nd\ne", "poesia")).toBe("a\nb\nc\nd…");
+    expect(extracto("a\nb\nc\nd\ne", "verso")).toBe("a\nb\nc\nd…");
   });
   it("en prosa corta por palabra", () => {
-    const e = extracto("palabra ".repeat(60), "cuento", 50);
+    const e = extracto("palabra ".repeat(60), "prosa", 50);
     expect(e.endsWith("…")).toBe(true);
     expect(e.length).toBeLessThanOrEqual(51);
   });

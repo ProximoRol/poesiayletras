@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BotonConfirmar } from "@/components/panel/BotonConfirmar";
 import { EditorTexto } from "@/components/panel/EditorTexto";
+import { temas } from "@/server/datos";
 import { env } from "@/server/env";
 import { borrarTexto } from "@/server/panel/acciones";
 import { usuario } from "@/server/supabase";
@@ -11,7 +12,7 @@ export default async function EditarTexto({ params, searchParams }: { params: Pr
   const [{ id }, { aviso }] = await Promise.all([params, searchParams]);
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
   const db = await usuario();
-  const { data } = await db.from("textos").select("*").eq("id", id).maybeSingle();
+  const [{ data }, listaTemas] = await Promise.all([db.from("textos").select("*").eq("id", id).maybeSingle(), temas()]);
   if (!data) notFound();
   const texto = data as Texto;
 
@@ -24,7 +25,8 @@ export default async function EditarTexto({ params, searchParams }: { params: Pr
         </div>
         <span className={`estado ${texto.estado}`}>{texto.estado === "publicado" ? "Publicado" : "Borrador"}</span>
       </div>
-      <EditorTexto key={texto.id} texto={texto} urlBase={env.supabaseUrl} avisoInicial={aviso} />
+      {/* La clave incluye el tema: si se crea uno nuevo al guardar, el selector vuelve a leer la lista. */}
+      <EditorTexto key={`${texto.id}-${texto.categoria}`} texto={texto} temas={listaTemas} urlBase={env.supabaseUrl} avisoInicial={aviso} />
       <form action={borrarTexto} style={{ marginTop: 40, textAlign: "right" }}>
         <input type="hidden" name="id" value={texto.id} />
         <BotonConfirmar pregunta="¿Borrar este texto para siempre? También se borran sus comentarios.">Borrar este texto</BotonConfirmar>

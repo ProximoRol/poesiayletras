@@ -2,15 +2,18 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { Obra } from "@/components/Obra";
-import { CATEGORIAS, type Categoria } from "@/domain/textos";
+import { NUEVO_TEMA, type Formato, type Tema } from "@/domain/textos";
 import { guardarTexto, type Resultado } from "@/server/panel/acciones";
 import type { Texto } from "@/server/tipos";
 import { SubirImagen } from "./SubirImagen";
 
-export function EditorTexto({ texto, urlBase, avisoInicial }: { texto: Texto | null; urlBase: string; avisoInicial?: string }) {
+export function EditorTexto({ texto, temas, urlBase, avisoInicial }: { texto: Texto | null; temas: Tema[]; urlBase: string; avisoInicial?: string }) {
   const [estado, enviar, guardando] = useActionState<Resultado, FormData>(guardarTexto, avisoInicial ? { ok: true, aviso: avisoInicial } : null);
   const [titulo, setTitulo] = useState(texto?.titulo ?? "");
-  const [categoria, setCategoria] = useState<Categoria>(texto?.categoria ?? "poesia");
+  const [categoria, setCategoria] = useState(texto?.categoria ?? temas[0]?.slug ?? NUEVO_TEMA);
+  const [formatoNuevo, setFormatoNuevo] = useState<Formato>("verso");
+  const nuevo = categoria === NUEVO_TEMA;
+  const formato: Formato = nuevo ? formatoNuevo : (temas.find((t) => t.slug === categoria)?.formato ?? "prosa");
   const [cuerpo, setCuerpo] = useState(texto?.cuerpo ?? "");
   const [vista, setVista] = useState(false);
   const [sucio, setSucio] = useState(false);
@@ -36,11 +39,27 @@ export function EditorTexto({ texto, urlBase, avisoInicial }: { texto: Texto | n
           <input className="input-titulo" type="text" name="titulo" required maxLength={200} value={titulo} onChange={(e) => { setTitulo(e.target.value); marcar(); }} placeholder="El título de tu texto" />
         </label>
         <label className="campo" style={{ maxWidth: 280 }}>
-          <span>¿Qué es?</span>
-          <select name="categoria" value={categoria} onChange={(e) => { setCategoria(e.target.value as Categoria); marcar(); }}>
-            {Object.entries(CATEGORIAS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          <span>Tema</span>
+          <select name="categoria" value={categoria} onChange={(e) => { setCategoria(e.target.value); marcar(); }}>
+            {temas.map((t) => <option key={t.slug} value={t.slug}>{t.nombre}</option>)}
+            <option value={NUEVO_TEMA}>＋ Otro tema…</option>
           </select>
         </label>
+        {nuevo && (
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+            <label className="campo" style={{ flex: "1 1 220px", maxWidth: 320 }}>
+              <span>Nombre del tema nuevo</span>
+              <input type="text" name="tema_nombre" required maxLength={40} placeholder="Ej.: Crónica, Haiku, Memorias" onChange={marcar} />
+            </label>
+            <label className="campo" style={{ flex: "1 1 200px", maxWidth: 280 }}>
+              <span>¿Cómo se escribe?</span>
+              <select name="tema_formato" value={formatoNuevo} onChange={(e) => { setFormatoNuevo(e.target.value as Formato); marcar(); }}>
+                <option value="verso">En versos (como un poema)</option>
+                <option value="prosa">En párrafos (como un cuento)</option>
+              </select>
+            </label>
+          </div>
+        )}
       </div>
 
       <div className="caja form-panel">
@@ -62,7 +81,7 @@ export function EditorTexto({ texto, urlBase, avisoInicial }: { texto: Texto | n
         {vista && (
           <div style={{ padding: "20px 0" }}>
             <h2 className="centro" style={{ fontSize: "2rem", marginBottom: 28 }}>{titulo || "Sin título"}</h2>
-            {cuerpo.trim() ? <Obra cuerpo={cuerpo} categoria={categoria} /> : <p className="muted centro">Todavía no hay texto.</p>}
+            {cuerpo.trim() ? <Obra cuerpo={cuerpo} formato={formato} /> : <p className="muted centro">Todavía no hay texto.</p>}
           </div>
         )}
         {!vista && (

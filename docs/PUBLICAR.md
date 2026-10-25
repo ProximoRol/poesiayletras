@@ -7,7 +7,8 @@ solo se paga el dominio (~USD 12 al año).
 
 1. Crear un proyecto nuevo en supabase.com (nombre: `poesiayletras`, región São Paulo).
 2. SQL Editor → correr, en orden, `supabase/migrations/0001_pagina_de_autor.sql`,
-   `0002_comentarios_al_instante.sql`, `0003_tienda_y_pedidos.sql` y después `supabase/contenido-inicial.sql` (su bio,
+   `0002_comentarios_al_instante.sql`, `0003_tienda_y_pedidos.sql`, `0004_temas_editables.sql`,
+   `0005_pago_con_flow.sql` y después `supabase/contenido-inicial.sql` (su bio,
    Instagram y el libro).
 3. Dar acceso al autor (SQL Editor), con el correo de Wagner:
    ```sql
@@ -35,16 +36,15 @@ solo se paga el dominio (~USD 12 al año).
    `CORREO_AVISOS` (correo de Wagner) y `CORREO_REMITENTE` (`Tu página <avisos@<dominio>>`).
    El correo trae un botón que lo lleva directo a aprobar el comentario.
 
-5. Tienda con Mercado Pago (la plata llega a la cuenta de Wagner):
-   - Wagner abre su cuenta en mercadopago.cl con su RUT (si no la tiene).
-   - mercadopago.cl/developers → Tus integraciones → Crear aplicación → «Pagos online»,
-     «Checkout Pro». En «Credenciales de producción» copiar el **Access Token**
-     → `MERCADOPAGO_ACCESS_TOKEN`.
-   - En la misma aplicación → Webhooks → URL `https://<dominio>/api/mercadopago`, evento
-     «Pagos». Copiar la clave secreta → `MERCADOPAGO_WEBHOOK_SECRET`.
+5. Tienda con Flow (la plata llega a la cuenta de Wagner; tarjetas y transferencia):
+   - Wagner abre su cuenta en flow.cl con su RUT y su cuenta bancaria para recibir la plata.
+   - flow.cl → Integración → Credenciales: copiar **ApiKey** → `FLOW_API_KEY` y
+     **SecretKey** → `FLOW_SECRET_KEY`.
+   - No hay que configurar avisos en Flow: cada cobro le dice a Flow dónde avisar
+     (`/api/flow/confirmacion`) y adónde devolver al comprador (`/api/flow/retorno`).
    - Supabase → Project Settings → API → `service_role` → `SUPABASE_SERVICE_ROLE_KEY` (solo se
      usa para confirmar pagos; nunca con prefijo `NEXT_PUBLIC_`).
-   - Probar con una compra real chica y reembolsarla desde Mercado Pago.
+   - Probar con una compra real chica y anularla desde Flow.
 
 La clave de servicio de Supabase solo la usa la confirmación de pagos; todo lo demás pasa por
 los permisos (RLS) de la base.
@@ -72,7 +72,7 @@ En `https://<dominio>/admin`:
 npm install
 npm run local:arrancar      # Supabase en Docker, puertos 563xx (Ugen usa 553xx)
 npm run local:admin         # autor de prueba + textos de ejemplo (credenciales en .env.local)
-node scripts/mp-falso.mjs   # Mercado Pago simulado para probar compras (otra terminal)
+node scripts/flow-falso.mjs # Flow simulado para probar compras (otra terminal)
 npm run dev                 # http://localhost:3110
 npm run local:permisos      # comprueba que RLS bloquea a los anónimos
 npm run check               # tipos, lint y pruebas

@@ -8,8 +8,9 @@ import { env, exigir } from "./env";
 // Tres clientes. Elegir el más restringido que sirva:
 //  · publico()  — anónimo, sin cookies: lo que ve cualquier lector (cacheable).
 //  · usuario()  — con la sesión del autor: el panel. RLS decide.
-//  · servicio() — salta RLS. SOLO para confirmar pagos de Flow y mostrar el pedido al
-//                 comprador que vuelve del pago. Nunca en el panel.
+//  · servicio() — salta RLS. SOLO para confirmar pagos de Flow, mostrar el pedido o el
+//                 encargo a quien vuelve del pago y guardar el texto de un encargo de
+//                 corrección. Nunca en el panel.
 
 let _publico: SupabaseClient | null = null;
 export function publico(): SupabaseClient {

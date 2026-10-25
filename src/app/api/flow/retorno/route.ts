@@ -9,9 +9,9 @@ import { procesarPago } from "@/server/pedidos";
 async function volver(token: string) {
   if (!hayPagos() || !tokenValido(token)) return NextResponse.redirect(`${env.sitio}/tienda`, 303);
   try {
-    const { pedidoId, estado } = await procesarPago(token);
+    const { ruta, estado } = await procesarPago(token);
     const extra = estado === "rechazado" ? "?pago=rechazado" : "";
-    return NextResponse.redirect(`${env.sitio}/pedido/${pedidoId}${extra}`, 303);
+    return NextResponse.redirect(`${env.sitio}${ruta}${extra}`, 303);
   } catch (e) {
     console.error("[flow] no se pudo leer el pago al volver", e);
     return NextResponse.redirect(`${env.sitio}/tienda`, 303);

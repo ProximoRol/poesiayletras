@@ -4,7 +4,7 @@ import { cache } from "react";
 import { hayBase } from "./env";
 import { publico } from "./supabase";
 import type { Tema } from "@/domain/textos";
-import type { Comentario, Libro, Perfil, Producto, Texto } from "./tipos";
+import type { Comentario, Libro, Perfil, Producto, Servicio, Texto } from "./tipos";
 
 // Lecturas públicas. Sin base configurada devuelven lo mínimo para que el sitio se vea.
 
@@ -88,4 +88,12 @@ export const productosVisibles = cache(async (): Promise<Producto[]> => {
   const { data, error } = await publico().from("productos").select("*").eq("visible", true).order("orden").order("creado_en");
   if (error) throw error;
   return (data ?? []) as Producto[];
+});
+
+/** Planes de corrección visibles, en el orden que eligió el autor. */
+export const serviciosVisibles = cache(async (): Promise<Servicio[]> => {
+  if (!hayBase()) return [];
+  const { data, error } = await publico().from("servicios").select("*").eq("visible", true).order("orden").order("creado_en");
+  if (error) throw error;
+  return (data ?? []) as Servicio[];
 });

@@ -52,7 +52,7 @@ export async function comprar(_previo: EstadoCompra, form: FormData): Promise<Es
 
   let url: string;
   try {
-    const cobro = await crearCobro({ pedidoId: data.id, numero: data.numero, total: data.total, correo: datos.correo, autor: (await perfil()).nombre });
+    const cobro = await crearCobro({ orden: data.id, asunto: `Pedido #${data.numero} · ${(await perfil()).nombre}`, total: data.total, correo: datos.correo });
     await servicio().from("pedidos").update({ pago_token: cobro.token }).eq("id", data.id);
     url = cobro.url;
   } catch (e) {

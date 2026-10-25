@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GrillaTextos } from "@/components/TarjetaTexto";
-import { CATEGORIAS, esCategoria } from "@/domain/textos";
-import { textosPublicados } from "@/server/datos";
+import { temasConTextos, textosPublicados } from "@/server/datos";
 
 export const metadata: Metadata = { title: "Textos", description: "Poemas, cuentos, ensayos y reflexiones." };
 
 export default async function Textos({ searchParams }: { searchParams: Promise<{ tipo?: string }> }) {
   const { tipo } = await searchParams;
-  const categoria = esCategoria(tipo) ? tipo : undefined;
+  const filtros = await temasConTextos();
+  const categoria = filtros.find((t) => t.slug === tipo)?.slug;
   const textos = await textosPublicados({ categoria });
 
   return (
@@ -22,14 +22,16 @@ export default async function Textos({ searchParams }: { searchParams: Promise<{
       </div>
       <section style={{ paddingTop: 20 }}>
         <div className="wrap">
-          <nav className="filtros" aria-label="Filtrar por tipo">
-            <Link href="/textos" className="chip" aria-current={!categoria ? "page" : undefined}>Todos</Link>
-            {Object.entries(CATEGORIAS).map(([clave, nombre]) => (
-              <Link key={clave} href={`/textos?tipo=${clave}`} className="chip" aria-current={categoria === clave ? "page" : undefined}>
-                {nombre}
-              </Link>
-            ))}
-          </nav>
+          {filtros.length > 0 && (
+            <nav className="filtros" aria-label="Filtrar por tema">
+              <Link href="/textos" className="chip" aria-current={!categoria ? "page" : undefined}>Todos</Link>
+              {filtros.map((t) => (
+                <Link key={t.slug} href={`/textos?tipo=${t.slug}`} className="chip" aria-current={categoria === t.slug ? "page" : undefined}>
+                  {t.nombre}
+                </Link>
+              ))}
+            </nav>
+          )}
           <GrillaTextos textos={textos} vacio={categoria ? "Todavía no hay textos de este tipo." : "Muy pronto, los primeros textos."} />
         </div>
       </section>

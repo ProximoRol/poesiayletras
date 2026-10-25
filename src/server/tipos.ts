@@ -1,4 +1,4 @@
-import type { Categoria } from "@/domain/textos";
+import type { Formato } from "@/domain/textos";
 
 export interface Perfil {
   nombre: string;
@@ -17,7 +17,10 @@ export interface Texto {
   id: string;
   slug: string;
   titulo: string;
-  categoria: Categoria;
+  /** Slug del tema (columna `categoria`). */
+  categoria: string;
+  /** El tema del texto, leído junto con él. */
+  tema: { nombre: string; formato: Formato } | null;
   cuerpo: string;
   extracto: string;
   imagen: string | null;

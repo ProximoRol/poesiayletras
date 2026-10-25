@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { bloques, type Categoria, type Linea } from "@/domain/textos";
+import { bloques, type Formato, type Linea } from "@/domain/textos";
 
 // Muestra el texto tal como lo escribió el autor: cada Enter es un verso y cada línea en
 // blanco una estrofa. React escapa todo; el único formato es *cursiva* y **negrita**.
@@ -14,8 +14,8 @@ function LineaObra({ linea }: { linea: Linea }) {
   );
 }
 
-export function Obra({ cuerpo, categoria }: { cuerpo: string; categoria: Categoria }) {
-  const verso = categoria === "poesia";
+export function Obra({ cuerpo, formato }: { cuerpo: string; formato: Formato }) {
+  const verso = formato === "verso";
   return (
     <div className={`obra ${verso ? "verso" : "prosa"}`}>
       <div>

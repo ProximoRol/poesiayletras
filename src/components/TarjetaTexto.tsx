@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { CATEGORIAS, minutosLectura } from "@/domain/textos";
+import { minutosLectura } from "@/domain/textos";
 import { fechaLarga } from "@/lib/contacto";
 import { urlImagen } from "@/server/supabase";
 import type { Texto } from "@/server/tipos";
 
 export function TarjetaTexto({ texto }: { texto: Texto }) {
   const imagen = urlImagen(texto.imagen);
+  const verso = texto.tema?.formato === "verso";
   return (
     <Link href={`/textos/${texto.slug}`} className="tarjeta">
       {imagen && (
@@ -13,12 +14,12 @@ export function TarjetaTexto({ texto }: { texto: Texto }) {
         <img className="thumb" src={imagen} alt="" loading="lazy" />
       )}
       <div className="cuerpo">
-        <span className="cat">{CATEGORIAS[texto.categoria]}</span>
+        <span className="cat">{texto.tema?.nombre}</span>
         <h3>{texto.titulo}</h3>
-        <p className={`extracto${texto.categoria === "poesia" ? " verso" : ""}`}>{texto.extracto}</p>
+        <p className={`extracto${verso ? " verso" : ""}`}>{texto.extracto}</p>
         <div className="pie">
           <span>{fechaLarga(texto.publicado_en)}</span>
-          <b>{texto.categoria === "poesia" ? "Leer poema →" : `${minutosLectura(texto.cuerpo)} min →`}</b>
+          <b>{verso ? "Leer poema →" : `${minutosLectura(texto.cuerpo)} min →`}</b>
         </div>
       </div>
     </Link>

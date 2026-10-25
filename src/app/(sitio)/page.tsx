@@ -1,23 +1,23 @@
 import Link from "next/link";
 import { VitrinaLibro } from "@/components/Libro";
 import { GrillaTextos } from "@/components/TarjetaTexto";
-import { librosVisibles, perfil, productosVisibles, textosPublicados } from "@/server/datos";
+import { librosVisibles, perfil, productosVisibles, temasConTextos, textosPublicados } from "@/server/datos";
 import { urlImagen } from "@/server/supabase";
 
 export const revalidate = 300;
 
 export default async function Portada() {
-  const [p, textos, libros, productos] = await Promise.all([perfil(), textosPublicados({ limite: 6 }), librosVisibles(), productosVisibles()]);
+  const [p, textos, libros, productos, conTextos] = await Promise.all([perfil(), textosPublicados({ limite: 6 }), librosVisibles(), productosVisibles(), temasConTextos()]);
   const foto = urlImagen(p.foto);
   const [nombre, ...apellidos] = p.nombre.split(" ");
-  const verso = textos.find((t) => t.categoria === "poesia")?.extracto.split("\n")[0];
+  const verso = textos.find((t) => t.tema?.formato === "verso")?.extracto.split("\n")[0];
 
   return (
     <>
       <section className="hero">
         <div className="wrap hero-grid">
           <div>
-            <span className="eyebrow">Poesía · Cuentos · Reflexiones</span>
+            <span className="eyebrow">{conTextos.map((t) => t.nombre).join(" · ") || "Poesía"}</span>
             <h1>
               {nombre} <em>{apellidos.join(" ")}</em>
             </h1>

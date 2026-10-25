@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { aSlug, esCategoria, extracto, slugLibre } from "@/domain/textos";
+import { aSlug, esFormato, extracto, NUEVO_TEMA, slugLibre, type Formato } from "@/domain/textos";
 import { avisarPedidoEnviado, type PedidoCorreo } from "../avisos";
 import { usuario } from "../supabase";
 import type { EnlaceCompra } from "../tipos";
@@ -34,10 +34,21 @@ export async function guardarTexto(_previo: Resultado, form: FormData): Promise<
 
   if (!titulo) return { ok: false, error: "Ponle un título al texto." };
   if (titulo.length > 200) return { ok: false, error: "El título es muy largo." };
-  if (!esCategoria(categoria)) return { ok: false, error: "Elige de qué tipo es el texto." };
   if (accion === "publicar" && !cuerpo.trim()) return { ok: false, error: "El texto está vacío." };
 
-  const datos: Record<string, unknown> = { titulo, categoria, cuerpo, imagen, extracto: extracto(cuerpo, categoria) };
+  // El tema puede ser uno existente o uno nuevo escrito ahí mismo («＋ Otro tema…»).
+  let tema: { slug: string; formato: Formato } | null;
+  if (categoria === NUEVO_TEMA) {
+    const creado = await crearTemaEn(db, txt(form, "tema_nombre"), txt(form, "tema_formato"));
+    if (!creado.ok) return creado;
+    tema = creado.tema;
+  } else {
+    const { data } = await db.from("temas").select("slug, formato").eq("slug", categoria).maybeSingle();
+    tema = data as typeof tema;
+  }
+  if (!tema) return { ok: false, error: "Elige de qué tema es el texto." };
+
+  const datos: Record<string, unknown> = { titulo, categoria: tema.slug, cuerpo, imagen, extracto: extracto(cuerpo, tema.formato) };
 
   let actual: { estado: string; publicado_en: string | null } | null = null;
   if (id) {
@@ -72,7 +83,7 @@ export async function guardarTexto(_previo: Resultado, form: FormData): Promise<
       : accion === "borrador"
         ? actual?.estado === "publicado" ? "Se retiró de la página. Quedó como borrador." : "Borrador guardado."
         : "Cambios guardados.";
-  if (!id) redirect(`/admin/textos/${guardadoId}?aviso=${encodeURIComponent(aviso)}`);
+  if (!id || categoria === NUEVO_TEMA) redirect(`/admin/textos/${guardadoId}?aviso=${encodeURIComponent(aviso)}`);
   return { ok: true, aviso };
 }
 
@@ -82,6 +93,83 @@ export async function borrarTexto(form: FormData) {
   await db.from("textos").delete().eq("id", txt(form, "id"));
   refrescarSitio();
   redirect("/admin?aviso=" + encodeURIComponent("Texto borrado."));
+}
+
+// ── Temas ───────────────────────────────────────────────────────────────────
+// El autor nombra sus temas como quiera. El slug se fija al crearlo (es el del filtro
+// /textos?tipo=…) y no cambia al renombrar, para no romper enlaces ya compartidos.
+
+type Db = Awaited<ReturnType<typeof usuario>>;
+
+async function crearTemaEn(db: Db, nombre: string, formato: string): Promise<{ ok: true; tema: { slug: string; formato: Formato } } | { ok: false; error: string }> {
+  if (!nombre) return { ok: false, error: "Escribe el nombre del tema nuevo." };
+  if (nombre.length > 40) return { ok: false, error: "El nombre del tema es muy largo (máximo 40 letras)." };
+  const f: Formato = esFormato(formato) ? formato : "prosa";
+  const { data: todos } = await db.from("temas").select("slug, nombre, formato, orden");
+  const lista = (todos ?? []) as { slug: string; nombre: string; formato: Formato; orden: number }[];
+  const igual = lista.find((t) => t.nombre.toLocaleLowerCase("es") === nombre.toLocaleLowerCase("es"));
+  if (igual) return { ok: true, tema: igual };
+  const slug = slugLibre(aSlug(nombre).slice(0, 50).replace(/-+$/, "") || "tema", lista.map((t) => t.slug));
+  const orden = lista.reduce((m, t) => Math.max(m, t.orden), -1) + 1;
+  const { error } = await db.from("temas").insert({ slug, nombre, formato: f, orden });
+  if (error) return { ok: false, error: "No se pudo crear el tema. Inténtalo de nuevo." };
+  return { ok: true, tema: { slug, formato: f } };
+}
+
+function volverATemas(aviso: string, error = false): never {
+  redirect(`/admin/temas?${error ? "error" : "aviso"}=` + encodeURIComponent(aviso));
+}
+
+export async function crearTema(form: FormData) {
+  await exigirAutor();
+  const db = await usuario();
+  const r = await crearTemaEn(db, txt(form, "nombre"), txt(form, "formato"));
+  if (!r.ok) volverATemas(r.error, true);
+  refrescarSitio();
+  volverATemas("Tema agregado.");
+}
+
+export async function guardarTema(form: FormData) {
+  await exigirAutor();
+  const db = await usuario();
+  const nombre = txt(form, "nombre");
+  const formato = txt(form, "formato");
+  if (!nombre || nombre.length > 40) volverATemas("El nombre del tema debe tener entre 1 y 40 letras.", true);
+  if (!esFormato(formato)) volverATemas("Elige si el tema va en versos o en párrafos.", true);
+  const slug = txt(form, "slug");
+  const { error } = await db.from("temas").update({ nombre, formato }).eq("slug", slug);
+  if (error) volverATemas("No se pudo guardar el tema.", true);
+  // El extracto de las tarjetas depende del formato: se rehace para los textos del tema.
+  const { data: textos } = await db.from("textos").select("id, cuerpo").eq("categoria", slug);
+  for (const t of textos ?? []) await db.from("textos").update({ extracto: extracto(t.cuerpo as string, formato as Formato) }).eq("id", t.id);
+  refrescarSitio();
+  volverATemas("Tema guardado.");
+}
+
+export async function moverTema(form: FormData) {
+  await exigirAutor();
+  const db = await usuario();
+  const { data } = await db.from("temas").select("slug, orden").order("orden").order("nombre");
+  const lista = (data ?? []) as { slug: string; orden: number }[];
+  const i = lista.findIndex((t) => t.slug === txt(form, "slug"));
+  const j = txt(form, "hacia") === "arriba" ? i - 1 : i + 1;
+  if (i < 0 || j < 0 || j >= lista.length) return;
+  [lista[i], lista[j]] = [lista[j], lista[i]];
+  await Promise.all(lista.map((t, n) => (t.orden === n ? null : db.from("temas").update({ orden: n }).eq("slug", t.slug))));
+  refrescarSitio();
+  revalidatePath("/admin/temas");
+}
+
+export async function borrarTema(form: FormData) {
+  await exigirAutor();
+  const db = await usuario();
+  const slug = txt(form, "slug");
+  const { count } = await db.from("textos").select("id", { count: "exact", head: true }).eq("categoria", slug);
+  if (count) volverATemas("Ese tema tiene textos. Cámbialos de tema antes de borrarlo.", true);
+  const { error } = await db.from("temas").delete().eq("slug", slug);
+  if (error) volverATemas("No se pudo borrar el tema.", true);
+  refrescarSitio();
+  volverATemas("Tema borrado.");
 }
 
 // ── Comentarios ─────────────────────────────────────────────────────────────

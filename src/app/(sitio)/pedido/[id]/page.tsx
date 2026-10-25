@@ -5,31 +5,23 @@ import { VaciarCarrito } from "@/components/Carrito";
 import { formatoCLP } from "@/lib/dinero";
 import { perfil } from "@/server/datos";
 import { hayPagos } from "@/server/env";
-import { pedidoPorId, procesarPago } from "@/server/pedidos";
+import { pedidoPorId } from "@/server/pedidos";
 
 export const metadata: Metadata = { title: "Tu pedido", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
-type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ payment_id?: string; status?: string }> };
+type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ pago?: string }> };
 
 export default async function PaginaPedido({ params, searchParams }: Props) {
   if (!hayPagos()) notFound();
-  const [{ id }, { payment_id, status }] = await Promise.all([params, searchParams]);
-
-  // Al volver de Mercado Pago se confirma el pago aquí mismo (por si el aviso aún no llega).
-  // procesarPago lo vuelve a leer a Mercado Pago: la URL no basta para marcarlo pagado.
-  if (payment_id && /^\d{1,30}$/.test(payment_id)) {
-    try {
-      await procesarPago(payment_id, { revalidar: false });
-    } catch (e) {
-      console.error("[pedido] no se pudo confirmar el pago al volver", e);
-    }
-  }
+  // El pago ya se confirmó al volver de Flow (/api/flow/retorno), leyéndolo a Flow.
+  // ?pago=rechazado solo cambia el mensaje: el estado real es el del pedido.
+  const [{ id }, { pago }] = await Promise.all([params, searchParams]);
 
   const [pedido, p] = await Promise.all([pedidoPorId(id), perfil()]);
   if (!pedido) notFound();
   const pagado = pedido.estado === "pagado" || pedido.estado === "enviado";
-  const rechazado = !pagado && (status === "rejected" || status === "failure" || status === "null");
+  const rechazado = !pagado && pago === "rechazado";
 
   return (
     <section style={{ paddingTop: 60 }}>

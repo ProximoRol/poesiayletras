@@ -18,7 +18,7 @@ export default async function Tienda() {
         <div className="wrap">
           <span className="eyebrow">Tienda</span>
           <h1 className="titulo-pagina">Para tener en las <em>manos</em></h1>
-          <p>Pago seguro con Mercado Pago. Envío a todo Chile por pagar: el envío se paga al recibirlo.</p>
+          <p>Pago seguro con Flow: tarjeta de débito, crédito o transferencia. Envío a todo Chile por pagar: el envío se paga al recibirlo.</p>
         </div>
       </div>
       <div className="wrap" style={{ paddingBottom: 70 }}>

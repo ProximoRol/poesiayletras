@@ -2,8 +2,9 @@
 
 import { redirect } from "next/navigation";
 import { REGIONES } from "@/lib/dinero";
+import { perfil } from "./datos";
 import { hayPagos } from "./env";
-import { crearPreferencia, type ItemCobro } from "./mercadopago";
+import { crearCobro, type ItemCobro } from "./flow";
 import { publico, servicio } from "./supabase";
 
 export type EstadoCompra = { ok: false; error: string } | null;
@@ -51,12 +52,12 @@ export async function comprar(_previo: EstadoCompra, form: FormData): Promise<Es
 
   let url: string;
   try {
-    const pref = await crearPreferencia({ pedidoId: data.id, numero: data.numero, items: data.items, nombre: datos.nombre, correo: datos.correo });
-    await servicio().from("pedidos").update({ mp_preferencia: pref.id }).eq("id", data.id);
-    url = pref.url;
+    const cobro = await crearCobro({ pedidoId: data.id, numero: data.numero, total: data.total, correo: datos.correo, autor: (await perfil()).nombre });
+    await servicio().from("pedidos").update({ pago_token: cobro.token }).eq("id", data.id);
+    url = cobro.url;
   } catch (e) {
-    console.error("[comprar] Mercado Pago no respondió", e);
-    return { ok: false, error: "No pudimos conectar con Mercado Pago. Inténtalo de nuevo en un momento." };
+    console.error("[comprar] Flow no respondió", e);
+    return { ok: false, error: "No pudimos conectar con el sistema de pago. Inténtalo de nuevo en un momento." };
   }
   redirect(url);
 }

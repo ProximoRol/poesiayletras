@@ -29,8 +29,8 @@ export default async function SobreMi() {
           ))}
           <div className="acciones" style={{ marginTop: 24 }}>
             <Link href="/textos" className="btn btn-primary">Leer mis textos</Link>
-            {wa && <a href={wa} target="_blank" rel="noopener noreferrer" className="btn btn-wa">Escríbeme por WhatsApp</a>}
-            {p.instagram && <a href={p.instagram} target="_blank" rel="noopener noreferrer" className="btn btn-ghost">Instagram</a>}
+            {wa && <a href={wa} target="_blank" rel="noopener noreferrer" className="btn btn-wa" data-track="whatsapp" data-track-donde="sobre_mi">Escríbeme por WhatsApp</a>}
+            {p.instagram && <a href={p.instagram} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" data-track="instagram" data-track-donde="sobre_mi">Instagram</a>}
           </div>
         </div>
       </div>

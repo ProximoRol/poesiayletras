@@ -3,6 +3,7 @@ import "server-only";
 import { revalidatePath } from "next/cache";
 import { avisarEncargoPagado, avisarPedidoPagado, type PedidoCorreo } from "./avisos";
 import { perfil } from "./datos";
+import { registrarDelServidor } from "./analitica";
 import { leerEstado } from "./flow";
 import { servicio } from "./supabase";
 import type { Encargo } from "./tipos";
@@ -50,6 +51,9 @@ export async function procesarPago(token: string): Promise<ResultadoPago> {
     : await servicio().rpc("confirmar_pago", { p_pedido: id, p_pago: String(pago.flowOrder), p_monto: monto });
   if (error) throw error;
   if (primeraVez) {
+    // La compra queda en el recorrido de la visita que la hizo (cuenta en su embudo).
+    const { data: v } = await servicio().from(esEncargo ? "encargos" : "pedidos").select("visitante_id, sesion_id").eq("id", id).maybeSingle();
+    await registrarDelServidor("purchase", { vid: v?.visitante_id ?? null, sid: v?.sesion_id ?? null }, { ruta, objeto: id, valor: monto, datos: { tipo: esEncargo ? "encargo" : "pedido" } });
     const autor = (await perfil()).nombre;
     if (esEncargo) {
       const encargo = await encargoPorId(id);

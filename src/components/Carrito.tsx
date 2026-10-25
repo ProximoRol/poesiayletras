@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { formatoCLP } from "@/lib/dinero";
+import { capaDatos, rastrear } from "@/lib/rastreo";
 
 // Carrito del sitio. En el navegador solo se guarda qué productos y cuántos; nombre, precio y
 // stock vienen siempre de la base (y al pagar, el precio lo vuelve a poner la base).
@@ -74,6 +75,9 @@ export function CarritoProvider({ productos, children }: { productos: ProductoCa
     setGuardado([]);
   }
   function agregar(id: string) {
+    const p = productos.find((x) => x.id === id);
+    rastrear("add_to_cart", { objeto: id, valor: p?.precio });
+    if (p) capaDatos("add_to_cart", {}, { currency: "CLP", value: p.precio, items: [{ item_id: p.id, item_name: p.nombre, price: p.precio, quantity: 1 }] });
     setGuardado((prev) => (prev.some((l) => l.id === id) ? prev.map((l) => (l.id === id ? { ...l, cantidad: l.cantidad + 1 } : l)) : [...prev, { id, cantidad: 1 }]));
     setAbierto(true);
   }
@@ -85,7 +89,7 @@ export function CarritoProvider({ productos, children }: { productos: ProductoCa
     <Contexto.Provider value={{ agregar, lineas, total, vaciar, listo }}>
       {children}
       {cuenta > 0 && !abierto && !sinBoton && (
-        <button type="button" className="btn btn-oscuro carrito-btn" onClick={() => setAbierto(true)}>
+        <button type="button" className="btn btn-oscuro carrito-btn" onClick={() => { setAbierto(true); rastrear("cart_open"); }}>
           Carrito ({cuenta})
         </button>
       )}

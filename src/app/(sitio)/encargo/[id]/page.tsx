@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { EmpujarCompra } from "@/components/IdsVisita";
 import { cantidadTexto } from "@/lib/correccion";
 import { formatoCLP } from "@/lib/dinero";
 import { perfil } from "@/server/datos";
@@ -26,6 +27,7 @@ export default async function PaginaEncargo({ params, searchParams }: Props) {
   return (
     <section style={{ paddingTop: 60 }}>
       <div className="estrecho centro">
+        {pagado && <EmpujarCompra id={encargo.id} valor={encargo.total} items={[{ item_id: encargo.servicio, item_name: `Corrección · ${encargo.servicio}`, price: encargo.precio, quantity: encargo.cantidad }]} />}
         <span className="eyebrow">Corrección #{encargo.numero}</span>
         {pagado ? (
           <>

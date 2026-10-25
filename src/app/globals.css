@@ -326,3 +326,18 @@ footer.pie { border-top: 1px solid var(--borde); padding: 52px 0 40px; backgroun
   .grid-tienda { grid-template-columns: 1fr; }
   .retrato .cita { left: 8px; }
 }
+
+/* ── Panel › Visitas ─────────────────────────────────────────────────────── */
+.kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-bottom: 28px; }
+.kpi { background: var(--papel); border: 1px solid var(--borde); border-radius: var(--radio); padding: 16px 18px; }
+.kpi b { display: block; font-family: var(--serif); font-size: 1.9rem; font-weight: 500; line-height: 1.1; }
+.kpi span { color: var(--tinta-suave); font-size: .86rem; }
+.tabla-visitas { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.tabla-visitas th, .tabla-visitas td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+.tabla-visitas th { font-weight: 600; color: var(--tinta-suave); font-size: .82rem; }
+.tabla-visitas td.num, .tabla-visitas th.num { text-align: right; white-space: nowrap; }
+.paso-embudo { display: grid; grid-template-columns: minmax(150px, 260px) 1fr auto; gap: 12px; align-items: center; padding: 7px 0; }
+.paso-embudo .barra { height: 14px; border-radius: 7px; background: var(--crema-2); overflow: hidden; }
+.paso-embudo .barra i { display: block; height: 100%; background: var(--terracota); border-radius: 7px; }
+.desplazable { overflow-x: auto; }
+@media (max-width: 640px) { .paso-embudo { grid-template-columns: 1fr auto; } .paso-embudo .barra { grid-column: 1 / -1; grid-row: 2; } }

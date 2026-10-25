@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { ARCHIVO_MAX, EXTENSIONES } from "@/lib/correccion";
+import { visitaDelPago } from "./analitica";
 import { perfil } from "./datos";
 import { hayPagos } from "./env";
 import { crearCobro } from "./flow";
@@ -69,7 +70,8 @@ export async function contratar(_previo: EstadoContrato, form: FormData): Promis
       total: data.total,
       correo: datos.correo,
     });
-    await db.from("encargos").update({ archivo: ruta, archivo_nombre: archivo.name.slice(0, 200), pago_token: cobro.token }).eq("id", data.id);
+    const visita = await visitaDelPago(form);
+    await db.from("encargos").update({ archivo: ruta, archivo_nombre: archivo.name.slice(0, 200), pago_token: cobro.token, visitante_id: visita.vid, sesion_id: visita.sid }).eq("id", data.id);
     url = cobro.url;
   } catch (e) {
     console.error("[contratar] Flow no respondió", e);

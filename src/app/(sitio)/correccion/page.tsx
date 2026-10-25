@@ -106,9 +106,9 @@ export default async function Correccion() {
                     {pl.incluye.map((i) => <li key={i}>{i}</li>)}
                   </ul>
                   {pl.precio !== null && pagos ? (
-                    <Link href={`/correccion/contratar/${pl.id}`} className={clase}>Contratar y pagar</Link>
+                    <Link href={`/correccion/contratar/${pl.id}`} className={clase} data-track="contratar" data-track-plan={pl.nombre}>Contratar y pagar</Link>
                   ) : consulta ? (
-                    <a href={consulta} target="_blank" rel="noopener noreferrer" className={clase}>Consultar por WhatsApp</a>
+                    <a href={consulta} target="_blank" rel="noopener noreferrer" className={clase} data-track="whatsapp" data-track-donde="correccion_plan" data-track-plan={pl.nombre}>Consultar por WhatsApp</a>
                   ) : null}
                 </div>
               );
@@ -124,7 +124,7 @@ export default async function Correccion() {
             <p>Envíame tu poema o cuento y recibe una muestra de corrección de las primeras líneas, sin compromiso.</p>
             {wa && (
               <div className="acciones">
-                <a href={wa} target="_blank" rel="noopener noreferrer" className="btn btn-wa">Escríbeme por WhatsApp</a>
+                <a href={wa} target="_blank" rel="noopener noreferrer" className="btn btn-wa" data-track="whatsapp" data-track-donde="correccion">Escríbeme por WhatsApp</a>
               </div>
             )}
           </div>

@@ -3,8 +3,10 @@
 import { useActionState, useState } from "react";
 import { ARCHIVO_MAX, cantidadTexto, EXTENSIONES, UNIDADES } from "@/lib/correccion";
 import { formatoCLP } from "@/lib/dinero";
+import { capaDatos, rastrear, vaciar } from "@/lib/rastreo";
 import { contratar, type EstadoContrato } from "@/server/contratar";
 import type { Servicio } from "@/server/tipos";
+import { IdsVisita } from "./IdsVisita";
 
 export function FormEncargo({ plan }: { plan: Servicio }) {
   const [estado, enviar, enviando] = useActionState<EstadoContrato, FormData>(contratar, null);
@@ -15,7 +17,16 @@ export function FormEncargo({ plan }: { plan: Servicio }) {
   const total = precio * (porCantidad ? Math.max(cantidad, plan.minimo) : 1);
 
   return (
-    <form action={enviar} className="form-panel">
+    <form
+      action={enviar}
+      className="form-panel"
+      onSubmit={() => {
+        rastrear("service_start", { objeto: plan.id, valor: total });
+        capaDatos("begin_checkout", {}, { currency: "CLP", value: total, items: [{ item_id: plan.id, item_name: `Corrección · ${plan.nombre}`, item_category: "correccion", price: precio, quantity: porCantidad ? Math.max(cantidad, plan.minimo) : 1 }] });
+        vaciar();
+      }}
+    >
+      <IdsVisita />
       <input type="hidden" name="servicio" value={plan.id} />
 
       <div className="caja-compra form-panel">

@@ -1,9 +1,13 @@
 import Link from "next/link";
+import Script from "next/script";
+import { Instrumentacion } from "@/components/Instrumentacion";
 import { CarritoProvider } from "@/components/Carrito";
 import { Menu } from "@/components/Menu";
 import { SECCIONES } from "@/lib/secciones";
 import { enlaceWhatsApp } from "@/lib/contacto";
 import { perfil, productosVisibles } from "@/server/datos";
+
+const GTM_ID = process.env.VERCEL_ENV === "production" ? process.env.NEXT_PUBLIC_GTM_ID || null : null;
 
 export default async function LayoutSitio({ children }: { children: React.ReactNode }) {
   const [p, productos] = await Promise.all([perfil(), productosVisibles()]);
@@ -11,6 +15,13 @@ export default async function LayoutSitio({ children }: { children: React.ReactN
 
   return (
     <CarritoProvider productos={productos.map(({ id, nombre, precio, stock }) => ({ id, nombre, precio, stock }))}>
+      <Instrumentacion clarityId={process.env.NEXT_PUBLIC_CLARITY_ID || null} />
+      {GTM_ID && (
+        // Google Tag Manager (GA4 y anuncios se configuran ahí). Solo en producción y si hay ID.
+        <Script id="gtm" strategy="afterInteractive">
+          {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer',${JSON.stringify(GTM_ID)});`}
+        </Script>
+      )}
       <Menu nombre={p.nombre} />
       <main>{children}</main>
       <footer className="pie">
@@ -30,9 +41,9 @@ export default async function LayoutSitio({ children }: { children: React.ReactN
             </div>
             <div className="pie-col">
               <h4>Contacto</h4>
-              {p.instagram && <a href={p.instagram} target="_blank" rel="noopener noreferrer">Instagram</a>}
+              {p.instagram && <a href={p.instagram} target="_blank" rel="noopener noreferrer" data-track="instagram" data-track-donde="pie">Instagram</a>}
               {p.facebook && <a href={p.facebook} target="_blank" rel="noopener noreferrer">Facebook</a>}
-              {wa && <a href={wa} target="_blank" rel="noopener noreferrer">WhatsApp</a>}
+              {wa && <a href={wa} target="_blank" rel="noopener noreferrer" data-track="whatsapp" data-track-donde="pie">WhatsApp</a>}
               {p.correo && <a href={`mailto:${p.correo}`}>{p.correo}</a>}
             </div>
           </div>
@@ -43,7 +54,7 @@ export default async function LayoutSitio({ children }: { children: React.ReactN
         </div>
       </footer>
       {wa && (
-        <a href={wa} className="wa-float" target="_blank" rel="noopener noreferrer" aria-label="Escribir por WhatsApp" title="Escribir por WhatsApp">
+        <a href={wa} className="wa-float" target="_blank" rel="noopener noreferrer" data-track="whatsapp" data-track-donde="flotante" aria-label="Escribir por WhatsApp" title="Escribir por WhatsApp">
           <IconoWhatsApp />
         </a>
       )}

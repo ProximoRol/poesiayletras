@@ -55,7 +55,7 @@ export default async function Tienda() {
             <h2>¿Buscas algo especial?</h2>
             <p>Un ejemplar dedicado, varios para regalar o un pedido para tu librería: escríbeme.</p>
             <div className="acciones">
-              <a href={wa} target="_blank" rel="noopener noreferrer" className="btn btn-wa">Escríbeme por WhatsApp</a>
+              <a href={wa} target="_blank" rel="noopener noreferrer" className="btn btn-wa" data-track="whatsapp" data-track-donde="tienda">Escríbeme por WhatsApp</a>
             </div>
           </div>
         )}

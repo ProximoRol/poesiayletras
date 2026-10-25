@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { formatoCLP, REGIONES } from "@/lib/dinero";
+import { capaDatos, rastrear, vaciar } from "@/lib/rastreo";
 import { comprar, type EstadoCompra } from "@/server/comprar";
+import { IdsVisita } from "./IdsVisita";
 import { useCarrito } from "./Carrito";
 
 export function FormCompra({ pagosActivos, whatsapp }: { pagosActivos: boolean; whatsapp: string | null }) {
@@ -21,7 +23,16 @@ export function FormCompra({ pagosActivos, whatsapp }: { pagosActivos: boolean; 
   }
 
   return (
-    <form action={enviar} className="form-panel">
+    <form
+      action={enviar}
+      className="form-panel"
+      onSubmit={() => {
+        rastrear("checkout_start", { valor: total });
+        capaDatos("begin_checkout", {}, { currency: "CLP", value: total, items: lineas.map((l) => ({ item_id: l.id, item_name: l.nombre, price: l.precio, quantity: l.cantidad })) });
+        vaciar(); // sale ya: después viene la página de Flow
+      }}
+    >
+      <IdsVisita />
       <input type="hidden" name="carro" value={JSON.stringify(lineas.map((l) => ({ producto_id: l.id, cantidad: l.cantidad })))} />
 
       <div className="caja-compra">

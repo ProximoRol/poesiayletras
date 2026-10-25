@@ -11,6 +11,7 @@ const ITEMS = [
   { href: "/admin/correccion", texto: "Corrección" },
   { href: "/admin/tienda", texto: "Tienda" },
   { href: "/admin/libros", texto: "Libros" },
+  { href: "/admin/visitas", texto: "Visitas" },
   { href: "/admin/perfil", texto: "Mi perfil" },
 ];
 

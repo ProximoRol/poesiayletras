@@ -20,9 +20,9 @@ export function Compartir({ url, titulo }: { url: string; titulo: string }) {
   return (
     <div className="compartir">
       <span>¿Te gustó? Compártelo:</span>
-      <a className="btn btn-wa btn-chico" href={wa} target="_blank" rel="noopener noreferrer">WhatsApp</a>
-      <a className="btn btn-ghost btn-chico" href={fb} target="_blank" rel="noopener noreferrer">Facebook</a>
-      <button type="button" className="btn btn-ghost btn-chico" onClick={copiar}>{copiado ? "¡Enlace copiado!" : "Copiar enlace"}</button>
+      <a className="btn btn-wa btn-chico" href={wa} target="_blank" rel="noopener noreferrer" data-track="compartir" data-track-red="whatsapp">WhatsApp</a>
+      <a className="btn btn-ghost btn-chico" href={fb} target="_blank" rel="noopener noreferrer" data-track="compartir" data-track-red="facebook">Facebook</a>
+      <button type="button" className="btn btn-ghost btn-chico" onClick={copiar} data-track="compartir" data-track-red="copiar_enlace">{copiado ? "¡Enlace copiado!" : "Copiar enlace"}</button>
     </div>
   );
 }

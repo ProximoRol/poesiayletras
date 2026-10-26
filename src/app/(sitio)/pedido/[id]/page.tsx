@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { VaciarCarrito } from "@/components/Carrito";
 import { EmpujarCompra } from "@/components/IdsVisita";
 import { formatoCLP } from "@/lib/dinero";
+import { envioPorPagar } from "@/lib/envio";
 import { perfil } from "@/server/datos";
 import { hayPagos } from "@/server/env";
 import { pedidoPorId } from "@/server/pedidos";
@@ -34,7 +35,7 @@ export default async function PaginaPedido({ params, searchParams }: Props) {
           <>
             <h1 className="titulo-pagina">¡Gracias, <em>{pedido.nombre.split(" ")[0]}</em>!</h1>
             <p className="muted" style={{ fontSize: "1.1rem", marginBottom: 28 }}>
-              Recibimos tu pago. {p.nombre.split(" ")[0]} prepara tu pedido y te lo envía por pagar a {pedido.comuna}. Te llegó la confirmación a {pedido.correo}.
+              Recibimos tu pago. {p.nombre.split(" ")[0]} prepara tu pedido y te lo envía {envioPorPagar(pedido.region, pedido.comuna) ? "por pagar" : "sin costo"} a {pedido.comuna}. Te llegó la confirmación a {pedido.correo}.
             </p>
           </>
         ) : rechazado ? (

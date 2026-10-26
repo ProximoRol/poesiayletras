@@ -14,7 +14,7 @@ export default async function TiendaPanel({ searchParams }: { searchParams: Prom
       <div className="panel-cabeza">
         <div>
           <h1>Mi tienda</h1>
-          <p className="muted">Lo que vendes en tu página. Se paga con Flow (tarjeta o transferencia) y el envío es por pagar.</p>
+          <p className="muted">Lo que vendes en tu página. Se paga con Flow (tarjeta o transferencia). El envío es gratis en Chile continental; a Magallanes e Isla de Pascua va por pagar.</p>
         </div>
         <Link href="/admin/tienda/nuevo" className="btn btn-primary">+ Agregar un producto</Link>
       </div>

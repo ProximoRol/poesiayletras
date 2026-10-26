@@ -1,5 +1,6 @@
 import { enlaceWhatsApp } from "@/lib/contacto";
 import { formatoCLP } from "@/lib/dinero";
+import { ENVIO_GRATIS } from "@/lib/envio";
 import { BotonAgregar } from "./Carrito";
 import { urlImagen } from "@/server/supabase";
 import type { Libro, Producto } from "@/server/tipos";
@@ -26,7 +27,7 @@ export function VitrinaLibro({ libro, producto, whatsapp, autor }: { libro: Libr
           <div className="acciones" style={{ alignItems: "center" }}>
             <span className="serif" style={{ fontSize: "1.8rem" }}>{formatoCLP(producto.precio)}</span>
             <BotonAgregar id={producto.id} agotado={producto.stock === 0} texto="Comprar" clase="btn btn-primary" />
-            <small className="muted" style={{ flexBasis: "100%" }}>Pago con tarjeta o transferencia · envío a todo Chile por pagar</small>
+            <small className="muted" style={{ flexBasis: "100%" }}>Pago con tarjeta o transferencia · {ENVIO_GRATIS}</small>
           </div>
         )}
         {pedir && (

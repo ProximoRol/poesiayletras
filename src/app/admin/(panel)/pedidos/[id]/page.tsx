@@ -7,6 +7,7 @@ import { ESTADOS } from "@/lib/pedidos";
 import { cancelarPedido, marcarEnviado } from "@/server/panel/acciones";
 import { usuario } from "@/server/supabase";
 import type { Pedido } from "@/server/tipos";
+import { envioPorPagar } from "@/lib/envio";
 
 export default async function DetallePedido({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -50,7 +51,7 @@ export default async function DetallePedido({ params }: { params: Promise<{ id: 
           <span>{p.estado === "pendiente_pago" || p.estado === "cancelado" ? "Total" : "Total pagado"}</span>
           <span>{formatoCLP(p.total)}</span>
         </div>
-        <p className="muted" style={{ fontSize: ".9rem", marginTop: 6 }}>El envío lo paga el comprador al recibirlo.</p>
+        <p className="muted" style={{ fontSize: ".9rem", marginTop: 6 }}>{envioPorPagar(p.region, p.comuna) ? "Envío por pagar (Magallanes o Isla de Pascua): lo paga el comprador al recibirlo." : "Envío gratis para el comprador: el despacho lo pagas tú."}</p>
       </div>
 
       {p.estado === "pagado" && (

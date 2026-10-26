@@ -21,7 +21,7 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
       <div className="panel-cabeza">
         <div>
           <h1>Pedidos</h1>
-          <p className="muted">Cuando un pedido está pagado, despáchalo por pagar y márcalo como enviado.</p>
+          <p className="muted">Cuando un pedido está pagado, despáchalo y márcalo como enviado. Cada pedido dice si el envío es gratis o por pagar.</p>
         </div>
         <nav className="filtros" style={{ margin: 0 }}>
           <Link href="/admin/pedidos" className="chip" aria-current={!todos ? "page" : undefined}>Pagados</Link>

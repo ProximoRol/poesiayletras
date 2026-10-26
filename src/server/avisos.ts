@@ -2,6 +2,7 @@ import "server-only";
 
 import { cantidadTexto } from "@/lib/correccion";
 import { formatoCLP } from "@/lib/dinero";
+import { envioPorPagar } from "@/lib/envio";
 import { env } from "./env";
 import type { Encargo } from "./tipos";
 
@@ -79,7 +80,7 @@ export async function avisarPedidoPagado(p: PedidoCorreo, autor: string): Promis
       correoAutor(),
       `Nuevo pedido pagado #${p.numero} — ${p.nombre}`,
       `<p style="font-size:22px;margin:0 0 16px">¡Vendiste! 📚 Pedido #${p.numero}</p>
-       <p style="margin:0 0 6px">Ya está pagado. Hay que enviarlo <b>por pagar</b> (Starken o Blue Express) a:</p>
+       <p style="margin:0 0 6px">Ya está pagado. Hay que enviarlo ${envioPorPagar(p.region, p.comuna) ? "<b>por pagar</b> (Magallanes o Isla de Pascua: lo paga quien recibe)" : "<b>con envío pagado por ti</b> (para el comprador es gratis)"} por Starken o Blue Express a:</p>
        ${cita(direccion(p))}
        <p style="margin:16px 0 6px">${lineas(p)}</p>
        ${p.notas ? `<p style="margin:16px 0 6px">Nota del comprador:</p>${cita(escapar(p.notas))}` : ""}
@@ -91,7 +92,7 @@ export async function avisarPedidoPagado(p: PedidoCorreo, autor: string): Promis
       [p.correo],
       `Recibimos tu pedido #${p.numero}`,
       `<p style="font-size:22px;margin:0 0 16px">¡Gracias por tu compra, ${escapar(p.nombre.split(" ")[0])}!</p>
-       <p>Tu pago fue recibido. ${escapar(autor)} preparará tu pedido y te lo enviará <b>por pagar</b> (el envío se paga al recibirlo) a:</p>
+       <p>Tu pago fue recibido. ${escapar(autor)} preparará tu pedido y te lo enviará ${envioPorPagar(p.region, p.comuna) ? "<b>por pagar</b> (el envío se paga al recibirlo)" : "<b>sin costo de envío</b>"} a:</p>
        ${cita(direccion(p))}
        <p style="margin:16px 0">${lineas(p)}</p>
        <p style="color:#5b4f45;font-size:15px">Te escribiremos cuando vaya en camino. Si tienes dudas, responde este correo.</p>`,
@@ -105,7 +106,7 @@ export async function avisarPedidoEnviado(p: PedidoCorreo, autor: string): Promi
     [p.correo],
     `Tu pedido #${p.numero} va en camino`,
     `<p style="font-size:22px;margin:0 0 16px">Tu pedido va en camino 📦</p>
-     <p>${escapar(autor)} despachó tu pedido #${p.numero}. Recuerda que el envío se paga al recibirlo.</p>
+     <p>${escapar(autor)} despachó tu pedido #${p.numero}.${envioPorPagar(p.region, p.comuna) ? " Recuerda que el envío se paga al recibirlo." : ""}</p>
      ${p.seguimiento ? `<p>Número de seguimiento:</p>${cita(escapar(p.seguimiento))}` : ""}
      <p style="color:#5b4f45;font-size:15px">¡Que lo disfrutes!</p>`,
     correoAutor()[0],

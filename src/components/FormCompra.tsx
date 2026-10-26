@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { formatoCLP, REGIONES } from "@/lib/dinero";
+import { ENVIO_GRATIS, envioPorPagar } from "@/lib/envio";
 import { capaDatos, rastrear, vaciar } from "@/lib/rastreo";
 import { comprar, type EstadoCompra } from "@/server/comprar";
 import { IdsVisita } from "./IdsVisita";
@@ -11,6 +12,9 @@ import { useCarrito } from "./Carrito";
 export function FormCompra({ pagosActivos, whatsapp }: { pagosActivos: boolean; whatsapp: string | null }) {
   const { lineas, total, listo } = useCarrito();
   const [estado, enviar, enviando] = useActionState<EstadoCompra, FormData>(comprar, null);
+  const [region, setRegion] = useState("");
+  const [comuna, setComuna] = useState("");
+  const porPagar = envioPorPagar(region, comuna);
 
   if (!listo) return <p className="muted">Cargando tu carrito…</p>;
   if (!lineas.length) {
@@ -48,7 +52,11 @@ export function FormCompra({ pagosActivos, whatsapp }: { pagosActivos: boolean; 
           <span>{formatoCLP(total)}</span>
         </div>
         <p className="muted" style={{ fontSize: ".9rem", marginTop: 8 }}>
-          + envío <b>por pagar</b>: lo despachamos por Starken o Blue Express y pagas el envío al recibirlo.
+          {porPagar ? (
+            <>+ envío <b>por pagar</b>: a Magallanes e Isla de Pascua lo despachamos por Starken o Blue Express y pagas el envío al recibirlo.</>
+          ) : (
+            <><b>Envío gratis</b>: lo despachamos por Starken o Blue Express. {region ? "" : ENVIO_GRATIS}</>
+          )}
         </p>
       </div>
 
@@ -62,10 +70,10 @@ export function FormCompra({ pagosActivos, whatsapp }: { pagosActivos: boolean; 
         </div>
         <label className="campo"><span>Dirección <small>· calle, número, depto.</small></span><input type="text" name="direccion" required autoComplete="street-address" maxLength={200} /></label>
         <div className="dos-col">
-          <label className="campo"><span>Comuna</span><input type="text" name="comuna" required maxLength={80} /></label>
+          <label className="campo"><span>Comuna</span><input type="text" name="comuna" required maxLength={80} value={comuna} onChange={(e) => setComuna(e.target.value)} /></label>
           <label className="campo">
             <span>Región</span>
-            <select name="region" required defaultValue="">
+            <select name="region" required value={region} onChange={(e) => setRegion(e.target.value)}>
               <option value="" disabled>Elige…</option>
               {REGIONES.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>

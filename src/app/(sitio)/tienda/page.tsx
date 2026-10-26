@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { BotonAgregar } from "@/components/Carrito";
 import { enlaceWhatsApp } from "@/lib/contacto";
 import { formatoCLP } from "@/lib/dinero";
+import { ENVIO_EXCEPCION, ENVIO_GRATIS } from "@/lib/envio";
 import { librosVisibles, perfil, productosVisibles } from "@/server/datos";
 import { urlImagen } from "@/server/supabase";
 
 export const revalidate = 300;
-export const metadata: Metadata = { title: "Tienda", description: "Sus libros y más, con envío a todo Chile." };
+export const metadata: Metadata = { title: "Tienda", description: "Sus libros, con envío gratis a todo Chile continental." };
 
 export default async function Tienda() {
   const [productos, p, libros] = await Promise.all([productosVisibles(), perfil(), librosVisibles()]);
@@ -18,7 +19,7 @@ export default async function Tienda() {
         <div className="wrap">
           <span className="eyebrow">Tienda</span>
           <h1 className="titulo-pagina">Para tener en las <em>manos</em></h1>
-          <p>Pago seguro con Flow: tarjeta de débito, crédito o transferencia. Envío a todo Chile por pagar: el envío se paga al recibirlo.</p>
+          <p>Pago seguro con Flow: tarjeta de débito, crédito o transferencia. {ENVIO_GRATIS} {ENVIO_EXCEPCION}</p>
         </div>
       </div>
       <div className="wrap" style={{ paddingBottom: 70 }}>

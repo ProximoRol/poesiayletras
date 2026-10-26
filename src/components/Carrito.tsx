@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { formatoCLP } from "@/lib/dinero";
+import { ENVIO_GRATIS } from "@/lib/envio";
 import { capaDatos, rastrear } from "@/lib/rastreo";
 
 // Carrito del sitio. En el navegador solo se guarda qué productos y cuántos; nombre, precio y
@@ -124,7 +125,7 @@ export function CarritoProvider({ productos, children }: { productos: ProductoCa
               {lineas.length > 0 && (
                 <Link href="/comprar" className="btn btn-primary" onClick={() => setAbierto(false)}>Comprar</Link>
               )}
-              <small className="muted centro">Pago seguro con Flow. El envío se paga al recibir (por pagar).</small>
+              <small className="muted centro">Pago seguro con Flow. {ENVIO_GRATIS}</small>
             </div>
           </aside>
         </>
